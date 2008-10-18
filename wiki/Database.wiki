@@ -42,6 +42,7 @@ The Database provides a Scala object model that allows for simple lookups and in
 
 {{{
 class Attribute[T] extends List[T] {
+  protected T decode (data :ByteBuffer)
 }
 
 class Id extends Attribute[Long] {
@@ -53,8 +54,7 @@ class Text extends Attribute[String] {
 class Bits extends Attribute[ByteBuffer] {
 }
 
-// TODO: should we pluralize all of these to express their list nature?
-// Ids, Texts, Bitses?
+// TODO: should we pluralize all of these to express their list nature? Ids, Texts, Bitses?
 
 class DatabaseObject {
   /** This object's unique identifier. */
