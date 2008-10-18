@@ -94,7 +94,8 @@ It also supports the definition of [Ontology] objects which simplify and clarify
 {{{
 class Person extends DatabaseObject {
   /** This person's primary name. */
-  def name () :Text = attr(Text, "name") // TODO: can we do this with reflection
+  def name () :Text = attr(Text, "name")
+  // TODO: can we do this with reflection, do we even want to?
 
   /** Other names by which this person is known. */
   def aliases () :Text = attr(Text, "aliases")
