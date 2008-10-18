@@ -36,6 +36,8 @@ The database is responsible for thread safety and locking. Twingle will have man
 
 === Database API ===
 
+The Database provides a Scala object model that 
+
 {{{
 class Attribute {
   // TBD
@@ -55,10 +57,14 @@ class Bits extends Attribute {
 
 class DatabaseObject {
   id :Id
+  def attrs () :List[Attribute]
 }
+
+// TBD: query expression classes
 
 class Database {
   def load (id :Id) :DatabaseObject
-  // TBD
+  def load[C] (clazz :Class[C], id :Id) :DatabaseObject
+  // TBD: query methods
 }
 }}}
