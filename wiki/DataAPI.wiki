@@ -4,9 +4,32 @@ The data API is the main way to access Your Data. In includes two major componen
 
 == Classes ==
 
-The Twingle data API contains classes that represent entities in its [Ontology] which are build from [Database] primitives.
+The Twingle data API contains classes that represent entities in its [Ontology] which are built from [Database] primitives.
 
-TBD
+{{{
+class Person extends DatabaseObject {
+  /** This person's primary name, or null if they have none. */
+  def name () :String = attr(Text, "name").firstOption.getOrElse(Nil)
+
+  /** Other names by which this person is known. */
+  def aliases () :Text = attr(Text, "aliases")
+
+  /** Email addresses associated with this person. */
+  def addresses () :Text = attr(Text, "addresses")
+}
+
+class Document extends DatabaseObject {
+  // TBD
+}
+
+class Message extends Document {
+  // TBD
+}
+
+class Conversation extends DatabaseObject {
+  // TBD
+}
+}}}
 
 == Injection API ==
 
