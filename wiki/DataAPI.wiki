@@ -8,7 +8,7 @@ The Twingle data API contains classes that represent entities in its [Ontology] 
 
 {{{
 class Person extends DatabaseObject {
-  /** This person's primary name, or null if they have none. */
+  /** This person's primary name, or Nil if they have none. */
   def name () :String = attr(Text, "name").firstOption.getOrElse(Nil)
 
   /** Other names by which this person is known. */
