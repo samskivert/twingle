@@ -13,7 +13,7 @@ The Twingle data API contains classes that represent entities in its [Ontology] 
 {{{
 class Person extends DatabaseObject {
   /** This person's primary name, or Nil if they have none. */
-  def name () :String = attr(Text, "name").firstOption.getOrElse(Nil)
+  def name () :String = attr(Text, "name").getOrElse(Nil)
 
   /** Other names by which this person is known. */
   def aliases () :Text = attr(Text, "aliases")
@@ -24,22 +24,22 @@ class Person extends DatabaseObject {
 
 class Document extends DatabaseObject {
   /** A URL defining this document's location or Nil. */
-  def location () :String = attr(Text, "location").firstOption.getOrElse(Nil)
+  def location () :String = attr(Text, "location").getOrElse(Nil)
 
   /** The name of this document or Nil. */
-  def name () :String = attr(Text, "name").firstOption.getOrElse(Nil)
+  def name () :String = attr(Text, "name").getOrElse(Nil)
 
   /** The text of this document or Nil. */
-  def text () :String = attr(Text, "text").firstOption.getOrElse(Nil)
+  def text () :String = attr(Text, "text").getOrElse(Nil)
 
   /** This document's binary data or Nil. */
-  def bits () :ByteArray = attr(Bits, "bits").firstOption.getOrElse(Nil)
+  def bits () :ByteArray = attr(Bits, "bits").getOrElse(Nil)
 
   /** The date on which this document was created or Nil. */
-  def created () :Date = attr(Date, "created").firstOption.getOrElse(Nil)
+  def created () :Date = attr(Date, "created").getOrElse(Nil)
 
   /** The date on which this document was last modified or Nil. */
-  def lastModified () :Date = attr(Date, "last_modified").firstOption.getOrElse(Nil)
+  def lastModified () :Date = attr(Date, "last_modified").getOrElse(Nil)
 }
 
 class Message extends Document {
