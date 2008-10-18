@@ -2,12 +2,12 @@
 
 = Components =
 
-  * [Object Model]
+  * [ObjectModel]
   * [Database]
-  * [Meta API]
-  * [Query API]
-  * [Query Server]
-  * [Spider Server]
-  * [Spider API]
+  * [MetaAPI]
+  * [QueryAPI]
+  * [QueryServer]
+  * [SpiderServer]
+  * [SpiderAPI]
 
 Architecture diagram coming soon.
