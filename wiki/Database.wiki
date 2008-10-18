@@ -58,7 +58,7 @@ class Bits extends Attribute[ByteBuffer] {
 
 class DatabaseObject {
   /** This object's unique identifier. */
-  id :Long
+  val id :Long
 
   /**
    * Returns a list of all attributes contained by this object.
