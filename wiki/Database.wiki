@@ -48,11 +48,11 @@ class Id extends Attribute {
 }
 
 class Text extends Attribute {
-  // TBD
+  def text () :String
 }
 
 class Bits extends Attribute {
-  // TBD
+  def bits () :ByteBuffer
 }
 
 class DatabaseObject {
