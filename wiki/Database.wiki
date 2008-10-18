@@ -55,5 +55,6 @@ class DatabaseObject {
 
 class Database {
   def load (id :Id) :DatabaseObject
+  // TBD
 }
 }}}
