@@ -38,15 +38,19 @@ The database is responsible for thread safety and locking. Twingle will have man
 
 {{{
 class Attribute {
+  // TBD
 }
 
 class Id extends Attribute {
+  // TBD
 }
 
 class Text extends Attribute {
+  // TBD
 }
 
 class Bits extends Attribute {
+  // TBD
 }
 
 class DatabaseObject {
