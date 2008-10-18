@@ -1,0 +1,19 @@
+#summary The Twingle data API.
+
+The data API is the main way to access Your Data. In includes two major components: adding data (injection) and retrieving data (querying).
+
+== Classes ==
+
+The Twingle data API contains classes that represent entities in its [Ontology] which are build from [Database] primitives.
+
+TBD
+
+== Injection API ==
+
+The injection API relies on the caller to have done the work of parsing the source data into objects from Twingle's ObjectModel. However, nothing ...
+
+TBD
+
+== Query API ==
+
+TBD
