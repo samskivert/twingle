@@ -19,7 +19,23 @@ class Person extends DatabaseObject {
 }
 
 class Document extends DatabaseObject {
-  // TBD
+  /** A URL defining this document's location or Nil. */
+  def location () :String = attr(Text, "location").firstOption.getOrElse(Nil)
+
+  /** The name of this document or Nil. */
+  def name () :String = attr(Text, "name").firstOption.getOrElse(Nil)
+
+  /** The text of this document or Nil. */
+  def text () :String = attr(Text, "text").firstOption.getOrElse(Nil)
+
+  /** This document's binary data or Nil. */
+  def bits () :ByteArray = attr(Bits, "bits").firstOption.getOrElse(Nil)
+
+  /** The date on which this document was created or Nil. */
+  def created () :Date = attr(Date, "created").firstOption.getOrElse(Nil)
+
+  /** The date on which this document was last modified or Nil. */
+  def lastModified () :Date = attr(Date, "last_modified").firstOption.getOrElse(Nil)
 }
 
 class Message extends Document {
