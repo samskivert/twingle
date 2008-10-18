@@ -54,7 +54,7 @@ class Bits extends Attribute[ByteBuffer] {
 }
 
 // TODO: should we pluralize all of these to express their list nature?
-// Attributes, Ids, Texts, Bitses?
+// Ids, Texts, Bitses?
 
 class DatabaseObject {
   /** This object's unique identifier. */
