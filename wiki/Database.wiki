@@ -16,6 +16,8 @@ Attributes come in three types:
 
 Every attribute is really a list of items of its type, so an _id_ attribute can contain a single id or a list of ids. Similarly for _text_ and _byte_ attributes.
 
+TODO: is the list ordered?
+
 === Queries ===
 
 Queries are done using a small number of operations. The following is not a syntax for a specialized query language. What sort of anti-social maniac would foist something like that on the world? Twingle is civilized and uses a query API that does not exclude the compiler from the development process. The following is just explanatory documentation:
@@ -36,34 +38,68 @@ The database is responsible for thread safety and locking. Twingle will have man
 
 === Database API ===
 
-The Database provides a Scala object model that 
+The Database provides a Scala object model that allows for simple lookups and insertions as well as more complex queries.
 
 {{{
 class Attribute {
   // TBD
 }
 
-class Id extends Attribute {
-  // TBD
+class Id extends Attribute with Seq[Long] {
 }
 
-class Text extends Attribute {
-  def text () :String
+class Text extends Attribute with List[String] {
 }
 
-class Bits extends Attribute {
-  def bits () :ByteBuffer
+class Bits extends Attribute with List[ByteBuffer] {
 }
 
 class DatabaseObject {
-  id :Id
+  /** This object's unique identifier. */
+  id :Long
+
+  /**
+   * Returns a list of all attributes contained by this object.
+   */
   def attrs () :List[Attribute]
+
+  /**
+   * Returns true if this object contains an attribute with the specified name.
+   */
+  def hasAttr (name :String) :Boolean
+
+  /**
+   * Returns the specified attribute or a blank attribute if this object does
+   * not contain the attribute in question. TODO: if it contains an attribute
+   * of the same name but the wrong type, do we return a blank attribute or fail?
+   *
+  def attr[A >: Attribute] (aclass :Class[A], name :String) :A
 }
 
 // TBD: query expression classes
 
 class Database {
-  def load[C] (clazz :Class[C], id :Id) :DatabaseObject
+  /**
+   * Loads the object with the specified id into an instance of the supplied
+   * DatabaseObject derived class. Returns null if no object exists with the supplied id.
+   */
+  def load[C >: DatabaseObject] (clazz :Class[C], id :Id) :DatabaseObject
+
   // TBD: query methods
+}
+}}}
+
+It also supports the definition of [Ontology] objects which simplify and clarify the code.
+
+{{{
+class Person extends DatabaseObject {
+  /** This person's primary name. */
+  def name () :Text = attr(Text, "name") // TODO: can we do this with reflection
+
+  /** Other names by which this person is known. */
+  def aliases () :Text = attr(Text, "aliases")
+
+  /** Email addresses associated with this person. */
+  def addresses () :Text = attr(Text, "addresses")
 }
 }}}
