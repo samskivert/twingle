@@ -1,6 +1,6 @@
 #summary The Twingle ontology.
 
-Where: [http://code.google.com/p/twingle/ Twingle] - [Overview] - Ontology
+You are here: [http://code.google.com/p/twingle/ Twingle] - [Overview] - Ontology
 
 == Ontology ==
 
