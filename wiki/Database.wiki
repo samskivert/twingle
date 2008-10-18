@@ -1,0 +1,39 @@
+#summary The Twingle database.
+
+Twingle has a lot of data to keep track of and it needs a flexible and fast database to accomplish its goals.
+
+== Database Objects ==
+
+The Twingle database is a single collection of database objects. Any database object can have any number of attributes and attributes are automatically indexed.
+
+=== Attributes ===
+
+Attributes come in three types:
+
+  * _id_ - every database object has a 64-bit numeric id (helpfully magically stored in an attribute named "id" and of type _id_); objects can reference other objects using _id_ attributes
+  * _text_ - UTF-8 text that is full-text indexed
+  * _bits_ - non-indexed unstructured bytes that are just kept around and made available for retrieval when needed
+
+Every attribute is really a list of items of its type, so an _id_ attribute can contain a single id or a list of ids. Similarly for _text_ and _byte_ attributes.
+
+=== Queries ===
+
+Queries are done using a small number of operations. The following is not a syntax for a specialized query language. What sort of anti-social maniac would foist something like that on the world? Twingle is civilized and uses a query API that does not exclude the compiler from the development process. The following is just explanatory documentation:
+
+  * `attribute = value` - returns all objects for which `attribute` contains a value that is equal to the specified value
+  * `attribute in (value, value, ...)` - returns all objects for which `attribute` contains any value that is equal to any of the values in the supplied list (clever monkeys will observe that this is just syntactic sugar for using the first query operation in conjuction with a bunch of `or` operations; Twingle likes sugar)
+  * `attribute matches query` - returns all objects for which `attribute` is a text attribute and matches the supplied full text query; Twingle doesn't yet know what technology it is going to use for full text indexing and thus doesn't know how sophisticated `query` can be
+  * `expr and expr` - returns all objects for which both query expressions match
+  * `expr or expr` - returns all objects for which one or the other query expressions match
+
+=== Inserts and Updates ===
+
+Inserts and updates are straightforward. It is possible to insert a new object into the database and be informed of said objects newly assigned id. It is also possible to update any attribute (or set of attributes) for an object, and the id attribute is always used to identify the object to be updated.
+
+=== Technical Notes ===
+
+The database is responsible for thread safety and locking. Twingle will have many threads accessing the database in parallel (doing inserts and lookups), and the database will handle locking as efficiently as it can.
+
+=== Query API ===
+
+TBD
