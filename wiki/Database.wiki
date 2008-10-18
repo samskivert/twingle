@@ -63,7 +63,6 @@ class DatabaseObject {
 // TBD: query expression classes
 
 class Database {
-  def load (id :Id) :DatabaseObject
   def load[C] (clazz :Class[C], id :Id) :DatabaseObject
   // TBD: query methods
 }
