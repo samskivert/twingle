@@ -49,7 +49,7 @@ The Database provides a Scala object model that allows for simple lookups and in
 abstract class Attribute[T] {
   val values :List[T]
 
-  def getOrElse (T defval) :T = values.firstOption.getOrElse(defval)
+  def getOrElse (defval :T) :T = values.firstOption.getOrElse(defval)
 }
 
 class Id extends Attribute[Long] {
@@ -73,7 +73,7 @@ class DatabaseObject {
   /**
    * Returns a list of all attributes contained by this object.
    */
-  def attrs () :List[Attribute]
+  def attrs () :List[Attribute[Any]]
 
   /**
    * Returns true if this object contains an attribute with the specified name.
@@ -85,7 +85,7 @@ class DatabaseObject {
    * not contain the attribute in question. TODO: if it contains an attribute
    * of the same name but the wrong type, do we return a blank attribute or fail?
    */
-  def attr[A >: Attribute] (aclass :Class[A], name :String) :A
+  def attr[A >: Attribute[Any]] (aclass :Class[A], name :String) :A
 }
 
 // TBD: query expression classes
