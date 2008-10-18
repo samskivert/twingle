@@ -1,6 +1,6 @@
 #summary The Twingle ontology.
 
-Twingle shoehorns the world of your data into a simple, but flexible ontology. Yes your data is precious and unique, but computers need structure. We bow to the almighty algorithm.
+Twingle shoehorns the world of your data into a simple, but flexible ontology (set of concepts and their relations). Yes your data is precious and unique, but computers need structure. We bow to the almighty algorithm.
 
 == Person ==
 
