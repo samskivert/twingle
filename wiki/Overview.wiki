@@ -32,4 +32,4 @@ Twingle wants to know all of Your Data, but time and energy are finite, so its p
 
 == Architecture ==
 
-Architecture diagram coming soon.
+http://twingle.googlecode.com/svn/wiki/twingarch.png
