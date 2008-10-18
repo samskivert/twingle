@@ -41,8 +41,7 @@ The database is responsible for thread safety and locking. Twingle will have man
 The Database provides a Scala object model that allows for simple lookups and insertions as well as more complex queries.
 
 {{{
-abstract class Attribute[T] extends List[T] {
-  protected abstract T decode (data :ByteBuffer)
+class Attribute[T] extends List[T] {
 }
 
 class Id extends Attribute[Long] {
