@@ -1,5 +1,9 @@
 #summary The Twingle ontology.
 
+Where: [http://code.google.com/p/twingle/ Twingle] - [Overview] - Ontology
+
+== Ontology ==
+
 Twingle shoehorns the world of your data into a simple, but flexible ontology (set of concepts and their relations). Yes your data is precious and unique, but computers need structure. We bow to the almighty algorithm.
 
 == Person ==
