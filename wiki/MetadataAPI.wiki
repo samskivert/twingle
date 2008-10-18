@@ -1,5 +1,9 @@
 #summary The Twingle metadata API.
 
+You are here: [http://code.google.com/p/twingle/ Twingle] - [Overview] - Metadata API
+
+== Metadata API ==
+
 Twingle keeps track of your data, but Twingle has data of its own that needs tracking and modification. This is metadata. It includes configuration information for Twingle and its Spiders as well as status information for same.
 
 The Metadata API allows Twingle's components to read and publish information.
