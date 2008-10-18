@@ -1,6 +1,6 @@
 #summary Various unstructured notes.
 
-= Things to think about =
+== Random Bits ==
 
   * Authentication
 
