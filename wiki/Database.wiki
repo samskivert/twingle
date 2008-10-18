@@ -36,4 +36,24 @@ The database is responsible for thread safety and locking. Twingle will have man
 
 === Database API ===
 
-TBD
+{{{
+class Attribute {
+}
+
+class Id extends Attribute {
+}
+
+class Text extends Attribute {
+}
+
+class Bits extends Attribute {
+}
+
+class DatabaseObject {
+  id :Id
+}
+
+class Database {
+  def load (id :Id) :DatabaseObject
+}
+}}}
