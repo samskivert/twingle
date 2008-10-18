@@ -34,6 +34,6 @@ Inserts and updates are straightforward. It is possible to insert a new object i
 
 The database is responsible for thread safety and locking. Twingle will have many threads accessing the database in parallel (doing inserts and lookups), and the database will handle locking as efficiently as it can.
 
-=== Query API ===
+=== Database API ===
 
 TBD
