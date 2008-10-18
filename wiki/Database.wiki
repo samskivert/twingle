@@ -8,15 +8,16 @@ The Twingle database is a single collection of database objects. Any database ob
 
 === Attributes ===
 
-Attributes come in three types:
+Attributes come in four types:
 
   * _id_ - every database object has a 64-bit numeric id (helpfully magically stored in an attribute named "id" and of type _id_); objects can reference other objects using _id_ attributes
   * _text_ - UTF-8 text that is full-text indexed
   * _bits_ - non-indexed unstructured bytes that are just kept around and made available for retrieval when needed
+  * _time_ - a timestamp (milliseconds since the epoch)
 
-Every attribute is really a list of items of its type, so an _id_ attribute can contain a single id or a list of ids. Similarly for _text_ and _byte_ attributes.
+Every attribute is really a list of items of its type, so an _id_ attribute can contain a single id or a list of ids. Similarly for _text_, _byte_ and _time_ attributes.
 
-TODO: is the list ordered?
+TODO: is the list ordered? Should we have separate attribute types for lists of attributes? Many of the ontology objects only want one of certain things and just use the first attribute which is kind of a hack.
 
 === Queries ===
 
@@ -50,10 +51,13 @@ class Id extends Attribute[Long] {
 class Text extends Attribute[String] {
 }
 
-class Bits extends Attribute[ByteBuffer] {
+class Bits extends Attribute[java.nio.ByteBuffer] {
 }
 
-// TODO: should we pluralize all of these to express their list nature? Ids, Texts, Bitses?
+class Time extends Attribute[java.util.Date] { // does Scala have a date class?
+}
+
+// TODO: should we pluralize all of these to express their list nature? Ids, Texts, Bitses, Times?
 
 class DatabaseObject {
   /** This object's unique identifier. */
