@@ -1,0 +1,6 @@
+#
+# $Id$
+#
+# Build configuration for Twingle
+
+scala.home = /absolute/path/to/scala/distribution

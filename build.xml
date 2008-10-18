@@ -1,0 +1,80 @@
+<!-- build configuration -->
+<project name="twingle" default="compile" basedir=".">
+
+  <!-- identify the application -->
+  <property name="app.ident" value="twingle"/>
+  <property name="app.name" value="Twingle"/>
+  <property name="app.version" value="0.1"/>
+
+  <!-- various basic settings -->
+  <property name="ssrc.dir" value="src/scala"/>
+  <property name="deploy.dir" value="dist"/>
+  <property name="dist.jar" value="${app.ident}.jar"/>
+
+  <!-- used when generating javadocs -->
+  <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
+  <property name="doc.packages" value="com.twingle.*"/>
+  <property name="doc.overview" value="com/twingle/overview.html"/>
+
+  <!-- read in our build properties -->
+  <property file="build.properties"/>
+
+  <!-- define the classpath for the scala tools -->
+  <path id="scala.classpath">
+    <pathelement location="${scala.home}/lib/scala-compiler.jar"/>
+    <pathelement location="${scala.home}/lib/scala-library.jar"/>
+  </path>
+
+  <!-- defines our classpath -->
+  <path id="twingle.classpath">
+    <!-- we need the scala runtime and compiler (pesky) here -->
+    <pathelement location="${scala.home}/lib/scala-compiler.jar"/>
+    <pathelement location="${scala.home}/lib/scala-library.jar"/>
+    <!-- and we need our own bits -->
+    <fileset dir="lib" includes="**/*.jar"/>
+  </path>
+
+  <!-- prepares the application directories -->
+  <target name="prepare">
+    <!-- make sure scala.home is defined -->
+    <fail unless="scala.home" message="Please configure build.properties with scala.home"/>
+    <echo>Using Scala installation in ${scala.home}</echo>
+
+    <!-- create our build directories -->
+    <mkdir dir="${deploy.dir}"/>
+    <mkdir dir="${deploy.dir}/classes"/>
+  </target>
+
+  <!-- cleans out the built application -->
+  <target name="clean">
+    <delete dir="${deploy.dir}"/>
+  </target>
+
+  <!-- builds the code -->
+  <target name="compile" depends="prepare">
+    <taskdef resource="scala/tools/ant/antlib.xml" classpathref="scala.classpath"/>
+
+    <scalac srcdir="${ssrc.dir}" destdir="${deploy.dir}/classes"
+            classpathref="twingle.classpath" force="changed">
+      <include name="**/*.scala"/>
+    </scalac>
+  </target>
+
+  <!-- builds our distribution files -->
+  <target name="dist" depends="prepare,compile">
+    <jar destfile="${deploy.dir}/${dist.jar}" basedir="${deploy.dir}/classes"/>
+  </target>
+
+  <!-- builds the javadoc documentation -->
+  <target name="javadoc" depends="prepare">
+    <mkdir dir="${javadoc.dir}"/>
+    <javadoc sourcepath="${ssrc.dir}"
+             packagenames="${doc.packages}"
+             windowtitle="${app.name} API"
+             doctitle="${app.name} API"
+             overview="${ssrc.dir}/${doc.overview}"
+             destdir="${javadoc.dir}">
+      <classpath refid="clazzpath"/>
+    </javadoc>
+  </target>
+</project>
