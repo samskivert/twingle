@@ -14,14 +14,14 @@ The Twingle database is a single collection of database objects. Any database ob
 
 Attributes come in four types:
 
-  * _id_ - every database object has a 64-bit numeric id (helpfully magically stored in an attribute named "id" and of type _id_); objects can reference other objects using _id_ attributes
+  * _id_ - every database object has a 128-bit uuid (helpfully magically stored in an attribute named "id" and of type UUID); objects can reference other objects using UUIDs
   * _text_ - UTF-8 text that is full-text indexed
-  * _bits_ - non-indexed unstructured bytes that are just kept around and made available for retrieval when needed
-  * _time_ - a timestamp (milliseconds since the epoch)
+  * _blob_ - non-indexed unstructured bytes that are just kept around and made available for retrieval when needed
+  * _time_ - a timestamp (milliseconds since the epoch) // paulp says: my sources tell me joda time is the way
 
-Every attribute is really a list of items of its type, so an _id_ attribute can contain a single id or a list of ids. Similarly for _text_, _byte_ and _time_ attributes.
+Attributes can be required single-value, optional single-value, or optional lists.  (Required list?) Attributes are properly typed, so they will always return T, Option[T], or List[T].
 
-TODO: is the list ordered? Should we have separate attribute types for lists of attributes? Many of the ontology objects only want one of certain things and just use the first attribute which is kind of a hack.
+TODO: is the list ordered? A: If there are use cases for both ordered and unordered list, it'd be easy enough to add an OrderedList[T] with extra requirements for insertion/deletion etc.  I'd wait for it to come up.
 
 === Queries ===
 
@@ -39,29 +39,45 @@ Inserts and updates are straightforward. It is possible to insert a new object i
 
 === Technical Notes ===
 
-The database is responsible for thread safety and locking. Twingle will have many threads accessing the database in parallel (doing inserts and lookups), and the database will handle locking as efficiently as it can.
+The database is responsible for thread safety and locking. Twingle will have many threads accessing the database in parallel (doing inserts and lookups), and the database will handle locking as efficiently as it can.  @p: Actors.
 
 === Database API ===
 
-The Database provides a Scala object model that allows for simple lookups and insertions as well as more complex queries.
+The Database provides a Scala object model that allows for simple lookups and insertions as well as more complex queries.  (paulp: here's a little trait hierarchy I just cooked up, as much to demo type parameters and abstract type members as anything else.  It does seem to do what it advertises, but I stopped before going too far.  I'm kind of fuzzy on the right placement of some data, i.e. Attribute vs. DatabaseObject vs. PersonOrWhatever.)
 
-{{{
-abstract class Attribute[T] {
-  val values :List[T]
-
-  def getOrElse (defval :T) :T = values.firstOption.getOrElse(defval)
+{{{  
+abstract trait Attribute[T] {
+  type Container
+  def data : Container
+  def |(default: T) : T
+}
+trait ListAttr[T] extends Attribute[T] {
+  type Container = List[T]
+  def |(default: T) : T = if (data.isEmpty) default else data.head
+}
+trait OptAttr[T] extends Attribute[T] {
+  type Container = Option[T]
+  def |(default: T) : T = data getOrElse default
+}
+trait ReqAttr[T] extends Attribute[T] {
+  type Container = T
+  def |(default: T) : T = data
 }
 
-class Id extends Attribute[Long] {
+
+class Id extends ReqAttr[java.util.UUID] {
+  lazy val id = java.util.UUID.randomUUID
+  def data = id
 }
 
-class Text extends Attribute[String] {
+class Texts(val text: String) extends ListAttr[String] {
 }
 
-class Bits extends Attribute[java.nio.ByteBuffer] {
+class Blobs extends ListAttr[java.nio.ByteBuffer] {
 }
 
-class Time extends Attribute[java.util.Date] { // does Scala have a date class?
+class Time extends ReqAttr[java.util.Date] { // does Scala have a date class?
+  val creationDate : org.joda.time.DateTime
 }
 
 // TODO: should we pluralize all of these to express their list nature? Ids, Texts, Bitses, Times?
@@ -73,7 +89,7 @@ class DatabaseObject {
   /**
    * Returns a list of all attributes contained by this object.
    */
-  def attrs () :List[Attribute[Any]]
+  def attrs : List[Attribute]
 
   /**
    * Returns true if this object contains an attribute with the specified name.
@@ -95,7 +111,7 @@ class Database {
    * Loads the object with the specified id into an instance of the supplied
    * DatabaseObject derived class. Returns null if no object exists with the supplied id.
    */
-  def load[C >: DatabaseObject] (oclass :Class[C], id :Long) :DatabaseObject
+  def load[C <: DatabaseObject] (oclass :Class[C], id :UUID) :DatabaseObject
 
   // TBD: query methods
 }
@@ -105,13 +121,13 @@ It also supports the definition of [Ontology] objects which simplify and clarify
 
 {{{
 class Person extends DatabaseObject {
-  /** This person's primary name, or null if they have none. */
-  def name () :String = attr(Text, "name").getOrElse(Nil)
+  /** This person's primary name. */
+  def name () :String = attr(Text, "name") | "<unknown>"
 
   /** Other names by which this person is known. */
-  def aliases () :Text = attr(Text, "aliases")
+  def aliases () :List[Text] = attr(Text, "aliases")
 
   /** Email addresses associated with this person. */
-  def addresses () :Text = attr(Text, "addresses")
+  def addresses () :List[Text] = attr(Text, "addresses")
 }
 }}}

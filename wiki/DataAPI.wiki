@@ -11,18 +11,21 @@ The data API is the main way to access Your Data. In includes two major componen
 The Twingle data API contains classes that represent entities in its [Ontology] which are built from [Database] primitives.
 
 {{{
-class Person extends DatabaseObject {
+// syntactically, you can say class Foo extends Bar when Bar is a trait, but
+// for clarity about the traitfulness of D.O. I write class Foo extends AnyRef with Bar
+// which is what the former expands to.
+class Person extends AnyRef with DatabaseObject {
   /** This person's primary name, or Nil if they have none. */
-  def name () :String = attr(Text, "name").getOrElse(Nil)
+  def name : String = attr(Text, "name").getOrElse(Nil)
 
   /** Other names by which this person is known. */
-  def aliases () :Text = attr(Text, "aliases")
+  def aliases : Text = attr(Text, "aliases")
 
   /** Email addresses associated with this person. */
-  def addresses () :Text = attr(Text, "addresses")
+  def addresses : Text = attr(Text, "addresses")
 }
 
-class Document extends DatabaseObject {
+class Document extends AnyRef with DatabaseObject {
   /** A URL defining this document's location or Nil. */
   def location () :String = attr(Text, "location").getOrElse(Nil)
 
@@ -46,7 +49,7 @@ class Message extends Document {
   // TBD
 }
 
-class Conversation extends DatabaseObject {
+class Conversation extends AnyRef with DatabaseObject {
   // TBD
 }
 }}}
