@@ -11,7 +11,7 @@ The data API is the main way to access Your Data. In includes two major componen
 The Twingle data API contains classes that represent entities in its [Ontology] which are built from [Database] primitives.
 
 {{{
-class Person extends DatabaseObject {
+class Person extends AnyRef with DatabaseObject {
   /** This person's primary name, or Nil if they have none. */
   def name () :String = attr(Text, "name").getOrElse(Nil)
 
