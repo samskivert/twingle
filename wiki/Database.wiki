@@ -19,7 +19,7 @@ Attributes come in four types:
   * _blob_ - non-indexed unstructured bytes that are just kept around and made available for retrieval when needed
   * _time_ - a timestamp (milliseconds since the epoch) // paulp says: my sources tell me joda time is the way
 
-Attributes can be required single-value, optional single-value, or optional lists.  (Required list?) Attributes are properly typed, so they will always return &#91;T&#93;, Option&#91;T&#93;, or List&#91;T&#93;.
+Attributes can be required single-value, optional single-value, or optional lists.  (Required list?) Attributes are properly typed, so they will always return <code>[T], Option[T], or List[T]</code>.
 
 TODO: is the list ordered? A: If there are use cases for both ordered and unordered list, it'd be easy enough to add an OrderedList[T] with extra requirements for insertion/deletion etc.  I'd wait for it to come up.
 
