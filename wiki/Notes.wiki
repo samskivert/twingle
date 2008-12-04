@@ -23,3 +23,9 @@ Ideally Twingle will be running on an Amazon S3 instance or some other network s
 == SMS Scanning or Injection ==
 
 Is this pie totally up in the sky or might such a thing be possible.
+
+== Text Indexing ==
+
+This library looks like an interesting potential alternative to Lucene:
+
+http://mg4j.dsi.unimi.it/
