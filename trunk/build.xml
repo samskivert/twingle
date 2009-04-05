@@ -43,6 +43,14 @@
     <!-- create our build directories -->
     <mkdir dir="${deploy.dir}"/>
     <mkdir dir="${deploy.dir}/classes"/>
+    <mkdir dir="${deploy.dir}/lib"/>
+
+    <!-- copy our library dependencies into place -->
+    <copy todir="${dist.dir}/lib" flatten="true">
+      <!-- <fileset dir="${scala.home}" includes="lib/scala-library.jar"/> -->
+      <fileset dir="lib" includes="samskivert.jar"/>
+      <fileset dir="lib" includes="scalatest*.jar"/>
+    </copy>
   </target>
 
   <!-- cleans out the built application -->

@@ -1,3 +1,11 @@
 #!/bin/sh
 
-scala -cp dist/classes "$*"
+# set up our classpath
+for JAR in $ROOT/dist/lib/*.jar; do
+    CLASSPATH=$CLASSPATH:$JAR
+done
+CLASSPATH=$ROOT/dist/classes:$ROOT:$CLASSPATH
+export CLASSPATH
+
+# run scala on the class in question
+scala "$*"
