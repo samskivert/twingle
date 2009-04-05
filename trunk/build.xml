@@ -46,7 +46,7 @@
     <mkdir dir="${deploy.dir}/lib"/>
 
     <!-- copy our library dependencies into place -->
-    <copy todir="${dist.dir}/lib" flatten="true">
+    <copy todir="${deploy.dir}/lib" flatten="true">
       <!-- <fileset dir="${scala.home}" includes="lib/scala-library.jar"/> -->
       <fileset dir="lib" includes="samskivert.jar"/>
       <fileset dir="lib" includes="scalatest*.jar"/>
