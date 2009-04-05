@@ -10,4 +10,4 @@ for JAR in $ROOT/dist/lib/*.jar; do
 done
 
 # run scala on the class in question
-scala -classpath $CLASSPATH "$*"
+scala -classpath $CLASSPATH "$@"
