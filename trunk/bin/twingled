@@ -1,0 +1,3 @@
+#!/bin/sh
+
+`dirname $0`/runscala com.twingle.daemon.Twingled "$@"
