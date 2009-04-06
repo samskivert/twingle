@@ -3,6 +3,7 @@ package com.twingle.spider
 import com.twingle.Log.log
 
 object TwitterCrawler {
+  
   def main (args :Array[String]) {
     // read command-line arguments
     if (args.length < 2) {
@@ -14,6 +15,9 @@ object TwitterCrawler {
 
     // query twitter for the latest statuses
     val client = new TwitterClient
-    client.friendsTimeline(args(0), args(1))
+    val statuses = client.friendsTimeline(args(0), args(1))
+    statuses.foreach(log.info(_))
+
+    0
   }
 }
