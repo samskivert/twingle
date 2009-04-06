@@ -12,7 +12,8 @@ import com.twingle.persist.OptAttr
 /**
  * Contains data for a document stored in the database.
  */
-class Document extends AnyRef with DatabaseObject {
+class Document extends AnyRef with DatabaseObject
+{
   /** The URL defining this document's location or "<unknown>". */
   def location () :String =
     attr[String, OptAttr[String]](classOf[OptAttr[String]], "location") | "<unknown>"
