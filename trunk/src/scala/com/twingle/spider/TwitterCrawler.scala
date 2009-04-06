@@ -14,7 +14,7 @@ object TwitterCrawler {
     val password = args(1)
 
     // query twitter for the latest statuses
-    val client = new TwitterClient
+    val client = new TwitterClient(new URLFetcher)
     val statuses = client.friendsTimeline(args(0), args(1))
     statuses.foreach(log.info(_))
 
