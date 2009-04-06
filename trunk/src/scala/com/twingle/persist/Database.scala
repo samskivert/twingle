@@ -17,7 +17,8 @@ trait Database
   def load[C <: DatabaseObject] (oclass :Class[C], id :UUID) :Option[C]
 
   /**
-   * Stores the supplied object in the database. Returns the newly assigned UUID for the object.
+   * Stores the supplied object in the database. If the object has no UUID assigned, a new UUID
+   * will be assigned. The object's UUID (newly assigned or not) is returned.
    */
   def store (obj :DatabaseObject) :UUID
 
