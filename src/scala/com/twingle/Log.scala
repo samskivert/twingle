@@ -3,7 +3,7 @@
 
 package com.twingle
 
-import java.util.logging.Logger
+import com.samskivert.util.Logger
 
 /**
  * Provides a logger used by the entire project.
