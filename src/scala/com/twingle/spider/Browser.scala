@@ -12,7 +12,7 @@ import com.twingle.Log.log
  * system.
  */
 object BrowserApp {
-  def main (args :Array[String]) = {
+  def main (args :Array[String]) {
     // parse command-line arguments
     if (args.length == 0) {
       log.warning("No url file path specified.")
@@ -29,6 +29,7 @@ object BrowserApp {
     val docs = urls.map(u => processUrl(u.stripLineEnd)).toList
 
     // someday we'll actually do something with these
+    docs
   }
 
   protected def fetchUrl (url :String) :String = Source.fromURL(url).toString()
