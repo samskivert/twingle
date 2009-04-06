@@ -29,6 +29,9 @@ trait DatabaseObject
    */
   def hasAttr (name :String) :Boolean = _attrs.contains(name)
 
+  // from AnyRef
+  override def toString = _attrs.toString
+
   /**
    * Returns the string value of the supplied field.
    */
