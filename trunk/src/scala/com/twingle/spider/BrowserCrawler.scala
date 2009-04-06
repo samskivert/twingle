@@ -11,7 +11,7 @@ import com.twingle.Log.log
  * index it for subsequent long-term storage and searching in the Twingle
  * system.
  */
-object BrowserApp {
+object BrowserCrawler {
   def main (args :Array[String]) {
     // parse command-line arguments
     if (args.length == 0) {
