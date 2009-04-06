@@ -10,10 +10,19 @@ import org.apache.commons.httpclient.{HttpClient, HttpMethod, HttpMethodBase,
 
 class URLFetcher {
   /** Simple response record to report on http request results. */ 
-  class Response (val method :HttpMethod, val resultCode :Int, val body :String)
+  case class Response (method :HttpMethod, resultCode :Int, body :String) {
+    override def toString () = {
+      val buf :StringBuffer = new StringBuffer
+      buf.append("[method=").append(method)
+      buf.append(", resultCode=").append(resultCode)
+      buf.append(", bodyLen=").append(if (body != null) body.size else 0)
+      buf.append("]").toString
+    }
+}
 
   /** Request a url via HTTP GET with http user authentication. */
-  def getAuthedUrl (url :String, host :String, username :String, password :String) :Response = {
+  def getAuthedUrl (url :String, host :String, username :String,
+                    password :String) :Response = {
     log.debug("Fetching via GET with auth", "url", url)
 
     // start by resetting the client http state
@@ -36,7 +45,7 @@ class URLFetcher {
     method.releaseConnection
 
     // build our response record
-    new Response(method, resultCode, body)
+    Response(method, resultCode, body)
   }
 
   /** Request a url via HTTP GET. */
@@ -53,7 +62,7 @@ class URLFetcher {
     method.releaseConnection
 
     // build our response record
-    new Response(method, resultCode, body)
+    Response(method, resultCode, body)
   }
   
   private[this] val _client = new HttpClient

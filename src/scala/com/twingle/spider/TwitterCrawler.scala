@@ -8,7 +8,14 @@ import scala.xml.{Node, XML}
 import com.twingle.Log.log
 
 /** Describes a Twitter user whose friend statuses are to be crawled. */
-class TwitterUser (val username :String, val password :String)
+case class TwitterUser (username :String, password :String) {
+  override def toString () = {
+    val buf :StringBuffer = new StringBuffer
+    buf.append("[username=").append(username)
+    buf.append(", password=").append(password)
+    buf.append("]").toString
+  }
+}
 
 object TwitterCrawlerApp {
   def main (args :Array[String]) {
@@ -21,39 +28,32 @@ object TwitterCrawlerApp {
     val password = args(1)
 
     // construct the user list to be queried
-    val users = List(new TwitterUser(username, password))
+    val users = List(TwitterUser(username, password))
 
     // query twitter for the latest statuses
     val crawler = new TwitterCrawler(new URLFetcher)
     val statuses = crawler.crawl(users)
     statuses.foreach(log.info(_))
-
-    0
   }
 }
 
 class TwitterCrawler (urlFetcher :URLFetcher) {
   /** Simple status record to contain a tweet. */
-  class TwitterStatus {
-    var createdAt :Date = null
-    var tweetId :Int = 0
-    var text :String = null
-    var userId :Int = 0
-    var userName :String = null
-    var screenName :String = null
-
+  case class TwitterStatus(createdAt :Date, tweetId :Int, text :String,
+                           userId :Int, userName :String, screenName :String)
+  {
     override def toString () = {
       val buf :StringBuffer = new StringBuffer
       buf.append("[createdAt=").append(createdAt)
       buf.append(", tweetId=").append(tweetId)
-      buf.append(", text=").append(text)
+      buf.append(", textLen=").append(if (text != null) text.size else 0)
       buf.append(", userId=").append(userId)
       buf.append(", userName=").append(userName)
       buf.append(", screenName=").append(screenName)
-      buf.toString
+      buf.append("]").toString
     }
   }
-
+  
   def crawl (users :Seq[TwitterUser]) :Seq[Seq[TwitterStatus]] = {
     users.map(getFriendsTimeline(_))
   }
@@ -78,22 +78,18 @@ class TwitterCrawler (urlFetcher :URLFetcher) {
   }
 
   protected def parseStatusElement (e :Node) :TwitterStatus = {
-    val status = new TwitterStatus
-
-    status.createdAt =
-      TwitterClient.dateFormatter.parse((e \ "created_at").text)
-    status.tweetId = (e \ "id").text.toInt
-    status.text = (e \ "text").text
+    val createdAt = _dateFormat.parse((e \ "created_at").text)
+    val tweetId = (e \ "id").text.toInt
+    val text = (e \ "text").text
 
     val userElem = (e \ "user")
-    status.userId = (userElem \ "id").text.toInt
-    status.userName = (userElem \ "name").text
-    status.screenName = (userElem \ "screen_name").text
+    val userId = (userElem \ "id").text.toInt
+    val userName = (userElem \ "name").text
+    val screenName = (userElem \ "screen_name").text
 
-    status
+    TwitterStatus(createdAt, tweetId, text, userId, userName, screenName)
   }
-}
 
-object TwitterCrawler {
-  val dateFormatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy")
+  private[this] val _dateFormat =
+    new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy")
 }
