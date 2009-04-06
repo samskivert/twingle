@@ -17,13 +17,18 @@ trait Database
   def load[C <: DatabaseObject] (oclass :Class[C], id :UUID) :Option[C]
 
   /**
-   * Stores the supplied object in the database. If the object has no UUID assigned, a new UUID
-   * will be assigned. The object's UUID (newly assigned or not) is returned.
+   * Stores the supplied object in the database.
    */
-  def store (obj :DatabaseObject) :UUID
+  def store (obj :DatabaseObject) :Unit
 
   /**
    * Searches the database and returns all objects that "match" the supplied query.
    */
   def find (query :String) :List[DatabaseObject]
+
+//   /**
+//    * Creates a new database object with the supplied data. A UUID will be assigned to the newly
+//    * created object.
+//    */
+//   def make (data :Map[String, String]) :DatabaseObject
 }
