@@ -3,14 +3,16 @@
 
 package com.twingle.persist
 
+import java.util.UUID
+
 /**
  * A persistent object loaded from the database which is comprised of a unique identifier and a
  * collection of attributes.
  */
-class DatabaseObject
+trait DatabaseObject
 {
   /** This object's unique identifier. */
-  val id :Long = 0L
+  def id :UUID = attr[UUID, ReqAttr[UUID]](classOf[ReqAttr[UUID]], "id").data
 
   /**
    * Returns a list of all attributes contained by this object.
@@ -27,5 +29,5 @@ class DatabaseObject
    * not contain the attribute in question. TODO: if it contains an attribute
    * of the same name but the wrong type, do we return a blank attribute or fail?
    */
-  def attr[A >: Attribute[Any]] (aclass :Class[A], name :String) :A = throw new Error()
+  def attr[A, B <: Attribute[A]] (aclass :Class[B], name :String) :B = throw new Error()
 }
