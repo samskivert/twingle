@@ -29,10 +29,11 @@ object BrowserApp {
     val docs = urls.map(u => processUrl(u.stripLineEnd)).toList
 
     // someday we'll actually do something with these
-    docs
+    0
   }
 
-  protected def fetchUrl (url :String) :String = Source.fromURL(url).toString()
+  protected def fetchUrl (url :String) :String =
+    Source.fromURL(url).getLines.mkString
 
   protected def processUrl (url :String) = {
     log.info("Processing [url=" + url + "].")
@@ -42,7 +43,6 @@ object BrowserApp {
     doc.location = url
     doc.text = fetchUrl(url)
     doc.lastModified = new Date
-
     log.info("Processed [doc=" + doc + "].")
 
     doc
