@@ -1,3 +1,6 @@
+//
+// $Id$
+
 package com.twingle.spider
 
 import com.twingle.Log.log
