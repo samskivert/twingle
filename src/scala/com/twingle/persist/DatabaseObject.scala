@@ -174,7 +174,7 @@ object DatabaseObject
     def unmarshal (value :String) = ByteBuffer.wrap(value.getBytes("ISO-8859-1"))
   }
 
-  protected val marshalers = scala.collection.mutable.Map[Class[_], Marshaler[_]]();
+  protected val marshalers = scala.collection.mutable.Map[Class[_], Marshaler[_]]()
   marshalers += (classOf[UUID] -> uuidM)
   marshalers += (classOf[String] -> stringM)
   marshalers += (classOf[Int] -> intM)
