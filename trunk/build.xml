@@ -8,11 +8,11 @@
 
   <!-- various basic settings -->
   <property name="ssrc.dir" value="src/scala"/>
-  <property name="deploy.dir" value="dist"/>
+  <property name="dist.dir" value="dist"/>
   <property name="dist.jar" value="${app.ident}.jar"/>
 
   <!-- used when generating javadocs -->
-  <property name="javadoc.dir"  value="${deploy.dir}/docs"/>
+  <property name="javadoc.dir"  value="${dist.dir}/docs"/>
   <property name="doc.packages" value="com.twingle.*"/>
   <property name="doc.overview" value="com/twingle/overview.html"/>
 
@@ -41,12 +41,12 @@
     <echo>Using Scala installation in ${scala.home}</echo>
 
     <!-- create our build directories -->
-    <mkdir dir="${deploy.dir}"/>
-    <mkdir dir="${deploy.dir}/classes"/>
-    <mkdir dir="${deploy.dir}/lib"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.dir}/classes"/>
+    <mkdir dir="${dist.dir}/lib"/>
 
     <!-- copy our library dependencies into place -->
-    <copy todir="${deploy.dir}/lib" flatten="true">
+    <copy todir="${dist.dir}/lib" flatten="true">
       <!-- <fileset dir="${scala.home}" includes="lib/scala-library.jar"/> -->
       <fileset dir="lib" includes="samskivert.jar"/>
       <fileset dir="lib" includes="commons-codec-1.3.jar"/>
@@ -58,14 +58,14 @@
 
   <!-- cleans out the built application -->
   <target name="clean">
-    <delete dir="${deploy.dir}"/>
+    <delete dir="${dist.dir}"/>
   </target>
 
   <!-- builds the code -->
   <target name="compile" depends="prepare">
     <taskdef resource="scala/tools/ant/antlib.xml" classpathref="scala.classpath"/>
 
-    <scalac srcdir="${ssrc.dir}" destdir="${deploy.dir}/classes"
+    <scalac srcdir="${ssrc.dir}" destdir="${dist.dir}/classes"
             classpathref="twingle.classpath" force="changed">
       <include name="**/*.scala"/>
     </scalac>
@@ -73,7 +73,22 @@
 
   <!-- builds our distribution files -->
   <target name="dist" depends="prepare,compile">
-    <jar destfile="${deploy.dir}/${dist.jar}" basedir="${deploy.dir}/classes"/>
+    <jar destfile="${dist.dir}/${dist.jar}" basedir="${dist.dir}/classes"/>
+  </target>
+
+  <!-- runs our unit tests -->
+  <target name="tests" depends="compile" description="Runs the unit tests.">
+    <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestTask">
+      <classpath><fileset dir="lib" includes="scalatest*.jar"/>
+      <pathelement location="${scala.home}/lib/scala-library.jar"/></classpath>
+    </taskdef>
+    <scalatest>
+      <runpath>
+        <fileset dir="${dist.dir}/lib" includes="*.jar"/>
+        <pathelement location="${classes.dir}"/>
+        <pathelement location="rsrc"/> <!-- test resources -->
+      </runpath>
+    </scalatest>
   </target>
 
   <!-- builds the javadoc documentation -->

@@ -109,6 +109,29 @@ trait DatabaseObject
 
 object DatabaseObject
 {
+  class Builder {
+    protected def add[T <: AnyRef] (name :String, value :T) {
+      _map += (name -> marshalers.get(value.getClass).get.asInstanceOf[Marshaler[T]].marshal(value))
+    }
+
+    protected def add[T <: AnyRef] (name :String, value :Option[T]) {
+      value match {
+        case None => //
+          case Some(v) => add(name, v)
+      }
+    }
+
+    protected def build[T <: DatabaseObject] (obj :T) = {
+      _map += ("id" -> uuidM.marshal(UUID.randomUUID))
+      obj.init(_map)
+      obj
+    }
+
+    private[this] var _map = Map[String, String]()
+  }
+
+  def builder = new Builder
+
   /** Used to convert strings to and from target data types. */
   protected trait Marshaler[T] {
     /** Marshals a value for this attribute into a string representation. */
@@ -147,4 +170,11 @@ object DatabaseObject
     def marshal (value :ByteBuffer) = new String(value.array, "ISO-8859-1")
     def unmarshal (value :String) = ByteBuffer.wrap(value.getBytes("ISO-8859-1"))
   }
+
+  protected val marshalers = scala.collection.mutable.Map[Class[_], Marshaler[_]]();
+  marshalers += (classOf[UUID] -> uuidM)
+  marshalers += (classOf[String] -> stringM)
+  marshalers += (classOf[Int] -> intM)
+  marshalers += (classOf[Date] -> dateM)
+  marshalers += (classOf[ByteBuffer] -> byteBufferM)
 }
