@@ -6,6 +6,21 @@ import scala.io.Source
 
 import com.twingle.Log.log
 
+case class URLDocument (location :String, name :String, text :String,
+                        bits :String, created :Date, lastModified :Date)
+{
+  override def toString () = {
+    val buf :StringBuffer = new StringBuffer
+    buf.append("[location=").append(location)
+    buf.append(", name=").append(name)
+    buf.append(", textLen=").append(if (text != null) text.size else 0)
+    buf.append(", bitsLen=").append(if (bits != null) bits.size else 0)
+    buf.append(", created=").append(created)
+    buf.append(", lastModified=").append(lastModified)
+    buf.append("]").toString
+  }
+}
+
 object URLCrawlerApp {
   def main (args :Array[String]) {
     // parse command-line arguments
@@ -27,16 +42,14 @@ object URLCrawlerApp {
 }
 
 class URLCrawler (urlFetcher :URLFetcher) {
-  def crawl (urls :Seq[String]) :Seq[Document] = {
+  def crawl (urls :Seq[String]) :Seq[URLDocument] = {
     urls.map(u => {
-      val doc = new Document
-      doc.created = new Date
-      doc.location = u
+      val created = new Date
+      val location = u
       val rsp = _urlFetcher.getUrl(u)
-      doc.text = rsp.body
-      doc.lastModified = new Date
-
-      doc
+      val text = rsp.body
+      val lastModified = new Date
+      URLDocument(location, null, text, null, created, lastModified)
     })
   }
 
