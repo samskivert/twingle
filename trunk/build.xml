@@ -10,6 +10,7 @@
   <property name="ssrc.dir" value="src/scala"/>
   <property name="dist.dir" value="dist"/>
   <property name="dist.jar" value="${app.ident}.jar"/>
+  <property name="classes.dir" value="${dist.dir}/classes"/>
 
   <!-- used when generating javadocs -->
   <property name="javadoc.dir"  value="${dist.dir}/docs"/>
@@ -42,7 +43,7 @@
 
     <!-- create our build directories -->
     <mkdir dir="${dist.dir}"/>
-    <mkdir dir="${dist.dir}/classes"/>
+    <mkdir dir="${classes.dir}"/>
     <mkdir dir="${dist.dir}/lib"/>
 
     <!-- copy our library dependencies into place -->
@@ -65,7 +66,7 @@
   <target name="compile" depends="prepare">
     <taskdef resource="scala/tools/ant/antlib.xml" classpathref="scala.classpath"/>
 
-    <scalac srcdir="${ssrc.dir}" destdir="${dist.dir}/classes"
+    <scalac srcdir="${ssrc.dir}" destdir="${classes.dir}"
             classpathref="twingle.classpath" force="changed">
       <include name="**/*.scala"/>
     </scalac>
@@ -73,7 +74,7 @@
 
   <!-- builds our distribution files -->
   <target name="dist" depends="prepare,compile">
-    <jar destfile="${dist.dir}/${dist.jar}" basedir="${dist.dir}/classes"/>
+    <jar destfile="${dist.dir}/${dist.jar}" basedir="${classes.dir}"/>
   </target>
 
   <!-- runs our unit tests -->
