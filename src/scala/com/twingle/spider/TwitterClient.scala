@@ -34,15 +34,14 @@ class TwitterClient (val urlFetcher :URLFetcher) {
 
   def friendsTimeline (username :String, password :String) :Seq[Status] = {
     val url = "http://twitter.com/statuses/friends_timeline.xml"
-    val (method, result, responseBody) =
-      urlFetcher.getAuthedUrl(url, "twitter.com", username, password)
-    if (result != 200) {
-      log.warning("Error fetching friends timeline", "result", ""+result,
-                  "responseBody", responseBody)
+    val rsp = urlFetcher.getAuthedUrl(url, "twitter.com", username, password)
+    if (rsp.resultCode != 200) {
+      log.warning("Error fetching friends timeline",
+                  "result", ""+rsp.resultCode, "body", rsp.body)
       return null
     }
 
-    val doc = XML.loadString(responseBody)
+    val doc = XML.loadString(rsp.body)
     if (doc == null) {
       return null
     }
