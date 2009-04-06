@@ -11,6 +11,8 @@ import org.apache.commons.httpclient.methods.GetMethod
 import org.apache.commons.httpclient.{HttpClient, HttpMethod, HttpMethodBase,
                                       UsernamePasswordCredentials}
 
+import org.apache.commons.io.IOUtils
+
 class URLFetcher {
   /** Simple response record to report on http request results. */ 
   case class Response (method :HttpMethod, resultCode :Int, body :String) {
@@ -61,7 +63,7 @@ class URLFetcher {
     // prepare the method with which we make the request
     val method = new GetMethod(url)
     val resultCode = _client.executeMethod(method)
-    val body = method.getResponseBodyAsString
+    val body = IOUtils.toString(method.getResponseBodyAsStream)
     method.releaseConnection
 
     // build our response record
