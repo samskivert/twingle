@@ -79,12 +79,12 @@ case class FriendFeedEntry (val updated :Date,
 object FriendFeedCrawlerApp {
   def main (args :Array[String]) {
     // read command-line arguments
-    if (args.length < 2) {
-      log.warning("No username and password specified.")
+    if (args.length < 1) {
+      log.warning("No username specified.")
       exit
     }
     val username = args(0)
-    val password = args(1)
+    val password = if (args.length > 1) args(1) else null
 
     // construct the user list to be queried
     val users = List(FriendFeedUser(username, password))
@@ -115,14 +115,23 @@ class FriendFeedCrawler (urlFetcher :URLFetcher) {
   }
 
   def getUserPosts (user :FriendFeedUser) :Seq[FriendFeedEntry] = {
+    // build the url to retrieve this user's entries
     val url = "http://friendfeed.com/api/feed/user/" + user.username + "?format=xml"
-    val rsp = 
+
+    // submit the request, only using authentication if required
+    val rsp = if (user.password != null) {
       urlFetcher.getAuthedUrl(url, "friendfeed.com", user.username, user.password)
+    } else {
+      urlFetcher.getUrl(url)
+    }
+
+    // turn the response into an xml document
     val doc = XML.loadString(rsp.body)
     if (doc == null) {
       return null
     }
-    
+
+    // parse out the user's posted entries
     val entries = (doc \\ "entry")
     entries.map(parseEntryElement(_))
   }
