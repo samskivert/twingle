@@ -10,16 +10,12 @@ import scala.xml.{Node, XML}
 
 import com.twingle.Log.log
 
-/** 
- * Describes a FriendFeed user whose posts are to be crawled, suitable
- * for passing to the {@link FriendFeedCrawler}.
- */
-case class FriendFeedUser (val username :String, val password :String) {
-  override def toString () = {
-    val buf :StringBuffer = new StringBuffer
-    buf.append("[username=").append(username)
-    buf.append(", password=").append(password)
-    buf.append("]").toString
+/** Details a single user's FriendFeed configuration. */
+case class FriendFeedSpiderConfig  (val username :String, val remoteKey :String) 
+  extends SpiderConfig {
+  def toString (buf :StringBuffer) = {
+    buf.append("username=").append(username)
+    buf.append(", remoteKey=").append(remoteKey)
   }
 }
 
@@ -76,23 +72,10 @@ case class FriendFeedEntry (val updated :Date,
   }
 }
 
-object FriendFeedCrawlerApp {
-  def main (args :Array[String]) {
-    // read command-line arguments
-    if (args.length < 1) {
-      log.warning("No username specified.")
-      exit
-    }
-    val username = args(0)
-    val password = if (args.length > 1) args(1) else null
-
-    // construct the user list to be queried
-    val users = List(FriendFeedUser(username, password))
-
-    // query friendfeed for the latest posts
-    val crawler = new FriendFeedCrawler(new URLFetcher)
-    val posts = crawler.crawl(users)
-    posts.foreach(log.info(_))
+case class FriendFeedSpiderResult (val entries :Seq[FriendFeedEntry])
+  extends SpiderResult {
+  def toString (buf :StringBuffer) = {
+    buf.append("entries=").append(entries)
   }
 }
 
@@ -102,25 +85,26 @@ object FriendFeedCrawlerApp {
  * See http://code.google.com/p/friendfeed-api/wiki/ApiDocumentation
  * for api documentation.
  *
- * The user "password" must be the remote key as available when logged 
- * in at:
+ * A user's remote key is available when logged in at:
  *
  * https://friendfeed.com/account/api
  *
  * A remote key is required for accessing private user feeds.
  */
-class FriendFeedCrawler (urlFetcher :URLFetcher) {
-  def crawl (users :Seq[FriendFeedUser]) :Seq[Seq[FriendFeedEntry]] = {
-    users.map(getUserPosts(_))
-  }
+class FriendFeedSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
+  def crawl (configs :Seq[SpiderConfig]) :Seq[SpiderResult] =
+    configs.map(_ match { case c :FriendFeedSpiderConfig => getUserPosts(c) })
 
-  def getUserPosts (user :FriendFeedUser) :Seq[FriendFeedEntry] = {
+  def getUserPosts (config :FriendFeedSpiderConfig) :SpiderResult = {
     // build the url to retrieve this user's entries
-    val url = "http://friendfeed.com/api/feed/user/" + user.username + "?format=xml"
+    val url = 
+      "http://friendfeed.com/api/feed/user/" + config.username + "?format=xml"
 
     // submit the request, only using authentication if required
-    val rsp = if (user.password != null) {
-      urlFetcher.getAuthedUrl(url, "friendfeed.com", user.username, user.password)
+    val rsp = if (config.remoteKey != null) {
+      urlFetcher.getAuthedUrl(url, "friendfeed.com", config.username, 
+                              config.remoteKey)
+
     } else {
       urlFetcher.getUrl(url)
     }
@@ -132,8 +116,11 @@ class FriendFeedCrawler (urlFetcher :URLFetcher) {
     }
 
     // parse out the user's posted entries
-    val entries = (doc \\ "entry")
-    entries.map(parseEntryElement(_))
+    val entryElements = (doc \\ "entry")
+    val entries = entryElements.map(parseEntryElement(_))
+
+    // create the final spider result
+    FriendFeedSpiderResult(entries)
   }
 
   protected def parseEntryElement (e :Node) :FriendFeedEntry = {
@@ -164,3 +151,24 @@ class FriendFeedCrawler (urlFetcher :URLFetcher) {
   /** Date format parser for FriendFeed dates which are in RFC 3339 format. */
   private[this] val _dateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss'Z'")
 }
+
+object FriendFeedSpiderApp {
+  def main (args :Array[String]) {
+    // read command-line arguments
+    if (args.length < 1) {
+      log.warning("No username specified.")
+      exit
+    }
+    val username = args(0)
+    val remoteKey = if (args.length > 1) args(1) else null
+
+    // construct the user list to be queried
+    val configs = List(FriendFeedSpiderConfig(username, remoteKey))
+
+    // query friendfeed for the latest posts
+    val crawler = new FriendFeedSpider(new URLFetcher)
+    val results = crawler.crawl(configs)
+    results.foreach(log.info(_))
+  }
+}
+
