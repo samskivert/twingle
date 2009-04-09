@@ -68,7 +68,7 @@ case class TwitterStatus (val createdAt :Date,
 
 class TwitterSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
   def crawl (configs :Seq[SpiderConfig]) :Seq[SpiderResult] =
-    configs.map(_ match { case c :TwitterSpiderConfig => getFriendsTimeline(c) })
+    configs.map(c => getFriendsTimeline(c.asInstanceOf[TwitterSpiderConfig]))
 
   def getFriendsTimeline (config :TwitterSpiderConfig) :SpiderResult = {
     // submit request for specified user's latest friend status timeline
