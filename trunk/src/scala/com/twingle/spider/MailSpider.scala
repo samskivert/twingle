@@ -12,55 +12,14 @@ import javax.mail.internet.{InternetAddress, MimeMultipart}
 
 import com.twingle.Log.log
 
-class MailException (msg: String) extends Exception(msg)
+class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
+{
+  import MailSpider._
 
-case class MailSpiderConfig (val protocol :String,
-                             val host :String,
-                             val port :Int,
-                             val username :String,
-                             val password :String,
-                             val debug :Boolean) extends SpiderConfig {
-  protected def toString (buf :StringBuffer) = {
-    buf.append("protocol=").append(protocol)
-    buf.append(", host=").append(host)
-    buf.append(", port=").append(port)
-    buf.append(", username=").append(username)
-    buf.append(", password=").append(password)
-    buf.append(", debug=").append(debug)
-  }
-}
+  def crawl (configs :Seq[Spider.Config]) :Seq[Spider.Result] =
+    configs.flatMap(c => fetchMail(c.asInstanceOf[Config]))
 
-// TODO: store flags e.g. answered, draft, seen, etc.; other headers?
-case class MailMessage (val from :String,
-                        val to :String,
-                        val replyTo :String,
-                        val subject :String,
-                        val date :Date,
-                        val contents :Object) {
-  override def toString :String = {
-    val buf :StringBuffer = new StringBuffer("[")
-    buf.append("from=").append(from)
-    buf.append(", to=").append(to)
-    buf.append(", replyTo=").append(replyTo)
-    buf.append(", subject=").append(subject)
-    buf.append(", date=").append(date)
-    buf.append(", contents=").append(contents)
-    return buf.append("]").toString
-  }
-}
-
-case class MailSpiderResult (val messages :Seq[MailMessage])
-     extends SpiderResult {
-  def toString (buf :StringBuffer) = {
-    buf.append("messages=").append(messages)
-  }
-}
-
-class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
-  def crawl (configs :Seq[SpiderConfig]) :Seq[SpiderResult] =
-    configs.flatMap(c => fetchMail(c.asInstanceOf[MailSpiderConfig]))
-
-  def fetchMail (config :MailSpiderConfig) :Option[MailSpiderResult] = {
+  def fetchMail (config :Config) :Option[Result] = {
     try {
       // get a base mail properties object
       val props :Properties = System.getProperties
@@ -88,7 +47,7 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
 
       // construct the final result record with all messages
       folderMessages match {
-        case Some(m) => Some(MailSpiderResult(m))
+        case Some(m) => Some(Result(m))
         case None => None
       }
 
@@ -252,6 +211,51 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
   }
 }
 
+object MailSpider
+{
+  class Config extends Spider.Config {
+    /** The email account's username. */
+    def username () :String = reqA(stringM, "username").data
+
+    /** The email account's password. TODO: can we encyrpt this? */
+    def password () :String = reqA(stringM, "password").data
+
+    /** The protocol to use when talking to the mail server (imap or imaps). */
+    def protocol () :String = reqA(stringM, "protocol").data
+
+    /** The host at which to contact the mail server. */
+    def host () :String = reqA(stringM, "host").data
+
+    /** The port on which to contact the mail server. */
+    def port () :Int = reqA(intM, "port").data
+
+    /** Whether or not to enable debug mode. */
+    def debug () :Boolean = reqA(booleanM, "debug").data
+  }    
+
+  case class Result (val messages :Seq[MailMessage]) extends Spider.Result
+
+  class MailException (msg: String) extends Exception(msg)
+
+  // TODO: store flags e.g. answered, draft, seen, etc.; other headers?
+  case class MailMessage (val from :String,
+                          val to :String,
+                          val replyTo :String,
+                          val subject :String,
+                          val date :Date,
+                          val contents :Object)
+
+  def configBuilder () = new Spider.ConfigBuilder {
+    def username (username :String) = { add("username", username); this }
+    def password (password :String) = { add("password", password); this }
+    def protocol (protocol :String) = { add("protocol", protocol); this }
+    def host (host :String) = { add("host", host); this }
+    def port (port :Int) = { add("port", port); this }
+    def debug (debug :Boolean) = { add("debug", debug); this }
+    def build :MailSpider.Config = build(new MailSpider.Config)
+  }
+}
+
 object MailSpiderApp {
   def main (args :Array[String]) {
     // read command-line arguments
@@ -259,15 +263,11 @@ object MailSpiderApp {
       log.warning("Protocol, host, user and password required.")
       exit
     }
-    val protocol = args(0)
-    val host = args(1)
-    val user = args(2)
-    val password = args(3)
 
     val port = -1
     val debug = true
-    val configs = List(MailSpiderConfig(protocol, host, port, user, password,
-                                        debug))
+    val configs = List(MailSpider.configBuilder.protocol(args(0)).host(args(1)).port(port).
+                       username(args(2)).password(args(3)).debug(debug).build)
 
     val crawler = new MailSpider(new URLFetcher)
     val results = crawler.crawl(configs)
