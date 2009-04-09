@@ -30,10 +30,21 @@ case class MailSpiderConfig (val protocol :String,
   }
 }
 
-case class MailMessage (val title :String) {
+// TODO: store flags e.g. answered, draft, seen, etc.; other headers?
+case class MailMessage (val from :String,
+                        val to :String,
+                        val replyTo :String,
+                        val subject :String,
+                        val date :Date,
+                        val body :String) {
   override def toString :String = {
     val buf :StringBuffer = new StringBuffer("[")
-    buf.append("title=").append(title)
+    buf.append("from=").append(from)
+    buf.append(", to=").append(to)
+    buf.append(", replyTo=").append(replyTo)
+    buf.append(", subject=").append(subject)
+    buf.append(", date=").append(date)
+    buf.append(", body=").append(body)
     return buf.append("]").toString
   }
 }
@@ -115,14 +126,32 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
     // build fetch profile to pull down specifically sought data
     val fp :FetchProfile = new FetchProfile
     fp.add(FetchProfile.Item.ENVELOPE)
-    fp.add(FetchProfile.Item.FLAGS)
-    fp.add("X-Mailer")
+//     fp.add(FetchProfile.Item.FLAGS)
+//     fp.add("X-Mailer")
     folder.fetch(msgs, fp)
 
     // build our final list of mail messages from the message records
-    Some(msgs.map(m => MailMessage(m.getSubject)))
+    Some(msgs.map(m => constructMailMessage(m)))
   }
 
+  def constructMailMessage (m :Message) :MailMessage = {
+    val from = addressesToString(m.getFrom)
+    val replyTo = addressesToString(m.getReplyTo)
+    val to = addressesToString(m.getRecipients(Message.RecipientType.TO))
+    val subject = m.getSubject
+    val date = m.getSentDate
+    MailMessage(from, to, replyTo, subject, date, null)
+  }
+
+  def addressesToString (addr :Seq[Address]) :String = {
+    if (addr == null) {
+      ""
+
+    } else {
+      addr.map(_.toString).mkString(",")
+    }
+  }
+  
   def dumpEnvelope (m :Message) {
     pr("This is the message envelope");
     pr("---------------------------");
