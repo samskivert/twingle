@@ -16,7 +16,7 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
 {
   import MailSpider._
 
-  def crawl (configs :Seq[Spider.Config]) :Seq[Spider.Result] =
+  def crawl (configs :Seq[Spider.Config]) :Seq[Result] =
     configs.flatMap(c => fetchMail(c.asInstanceOf[Config]))
 
   def fetchMail (config :Config) :Option[Result] = {
@@ -233,7 +233,7 @@ object MailSpider
     def debug () :Boolean = reqA(booleanM, "debug").data
   }    
 
-  case class Result (val messages :Seq[MailMessage]) extends Spider.Result
+  case class Result (val messages :Seq[MailMessage])
 
   class MailException (msg: String) extends Exception(msg)
 
