@@ -11,12 +11,6 @@ import com.twingle.persist.Database
  */
 trait Env
 {
-  /** An interface that must be implemented by our periodic jobs. */
-  trait Job {
-    /** Runs this job. */
-    def run (env :Env)
-  }
-
   /** Provides access to the database. */
   val db :Database
 
