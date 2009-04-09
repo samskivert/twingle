@@ -20,7 +20,7 @@ case class MailSpiderConfig (val protocol :String,
                              val username :String,
                              val password :String,
                              val debug :Boolean) extends SpiderConfig {
-  def toString (buf :StringBuffer) = {
+  protected def toString (buf :StringBuffer) = {
     buf.append("protocol=").append(protocol)
     buf.append(", host=").append(host)
     buf.append(", port=").append(port)

@@ -11,9 +11,9 @@ import scala.xml.{Node, XML}
 import com.twingle.Log.log
 
 /** Details a single user's FriendFeed configuration. */
-case class FriendFeedSpiderConfig  (val username :String, val remoteKey :String) 
+case class FriendFeedSpiderConfig (val username :String, val remoteKey :String)
   extends SpiderConfig {
-  def toString (buf :StringBuffer) = {
+  protected def toString (buf :StringBuffer) = {
     buf.append("username=").append(username)
     buf.append(", remoteKey=").append(remoteKey)
   }

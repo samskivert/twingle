@@ -13,7 +13,7 @@ import com.twingle.Log.log
 /** Describes a Twitter user whose friend statuses are to be crawled. */
 case class TwitterSpiderConfig (val username :String, val password :String) 
   extends SpiderConfig {
-  def toString (buf :StringBuffer) = {
+  protected def toString (buf :StringBuffer) = {
     buf.append("username=").append(username)
     buf.append(", password=").append(password)
   }
