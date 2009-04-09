@@ -47,7 +47,7 @@ case class MailSpiderResult (val messages :Seq[MailMessage])
 
 class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
   def crawl (configs :Seq[SpiderConfig]) :Seq[SpiderResult] =
-    configs.map(c => fetchMail(c.asInstanceOf[MailSpiderConfig]))
+    configs.flatMap(c => fetchMail(c.asInstanceOf[MailSpiderConfig]))
 
   def fetchMail (config :MailSpiderConfig) :Option[MailSpiderResult] = {
     try {
