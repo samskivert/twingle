@@ -15,6 +15,9 @@ abstract class SpiderConfig extends DatabaseObject
 
   /** The frequency (in seconds) at which we run this spider. */
   def runEvery () :Int = reqA(intM, "runEvery").data
+
+  /** Creates a job that executes this configuration. */
+  def createJob () :Job
 }
 
 /**
