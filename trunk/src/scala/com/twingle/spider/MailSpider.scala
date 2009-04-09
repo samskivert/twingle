@@ -62,17 +62,17 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
       val store :Store = session.getStore(config.protocol)
       store.connect(config.host, config.port, config.username, config.password)
 
-      // get the default folder from the store, which is the only
-      // folder we'll bother fetching messages from, at least for now
+      // get the default folder from the store
       val folder :Folder = store.getDefaultFolder
+      val mbox = "INBOX"
+      val subFolder = folder.getFolder(mbox)
 
       // try to pull down all messages
-      val folderMessages :Option[Seq[MailMessage]] = fetchFolderMessages(folder)
+      val folderMessages :Option[Seq[MailMessage]] =
+        fetchFolderMessages(subFolder)
 
-      // close down the folder and store
-      if (folder != null) {
-        folder.close(false)
-      }
+      // close down the folders and store
+      subFolder.close(false)
       store.close
 
       // construct the final result record with all messages
@@ -94,11 +94,6 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
    * them as a sequence of {@link MailMessage} records.
    */
   def fetchFolderMessages (folder :Folder) :Option[Seq[MailMessage]] = {
-    if (folder == null) {
-      log.info("No default folder.")
-      return None
-    }
-
     // open the folder for reading messages
     folder.open(Folder.READ_ONLY)
 
