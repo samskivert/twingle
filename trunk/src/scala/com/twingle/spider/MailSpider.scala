@@ -8,7 +8,7 @@ import java.util.{Date, Properties}
 import javax.mail.{Address, FetchProfile, Flags, Folder, Message,
                    MessagingException, Session, Store}
 import javax.mail.Flags.Flag
-import javax.mail.internet.InternetAddress
+import javax.mail.internet.{InternetAddress, MimeMultipart}
 
 import com.twingle.Log.log
 
@@ -36,7 +36,7 @@ case class MailMessage (val from :String,
                         val replyTo :String,
                         val subject :String,
                         val date :Date,
-                        val body :String) {
+                        val contents :Object) {
   override def toString :String = {
     val buf :StringBuffer = new StringBuffer("[")
     buf.append("from=").append(from)
@@ -44,7 +44,7 @@ case class MailMessage (val from :String,
     buf.append(", replyTo=").append(replyTo)
     buf.append(", subject=").append(subject)
     buf.append(", date=").append(date)
-    buf.append(", body=").append(body)
+    buf.append(", contents=").append(contents)
     return buf.append("]").toString
   }
 }
@@ -126,6 +126,7 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
     // build fetch profile to pull down specifically sought data
     val fp :FetchProfile = new FetchProfile
     fp.add(FetchProfile.Item.ENVELOPE)
+    fp.add(FetchProfile.Item.CONTENT_INFO)
 //     fp.add(FetchProfile.Item.FLAGS)
 //     fp.add("X-Mailer")
     folder.fetch(msgs, fp)
@@ -135,12 +136,14 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
   }
 
   def constructMailMessage (m :Message) :MailMessage = {
+    // pull out the simple bits
     val from = addressesToString(m.getFrom)
     val replyTo = addressesToString(m.getReplyTo)
     val to = addressesToString(m.getRecipients(Message.RecipientType.TO))
     val subject = m.getSubject
     val date = m.getSentDate
-    MailMessage(from, to, replyTo, subject, date, null)
+    val content = m.getContent
+    MailMessage(from, to, replyTo, subject, date, content)
   }
 
   def addressesToString (addr :Seq[Address]) :String = {
