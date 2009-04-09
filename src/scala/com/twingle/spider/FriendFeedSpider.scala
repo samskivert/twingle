@@ -26,10 +26,10 @@ class FriendFeedSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
 {
   import FriendFeedSpider._
 
-  def crawl (configs :Seq[Spider.Config]) :Seq[Spider.Result] =
+  def crawl (configs :Seq[Spider.Config]) :Seq[Result] =
     configs.map(c => getUserPosts(c.asInstanceOf[Config]))
 
-  def getUserPosts (config :Config) :Spider.Result = {
+  def getUserPosts (config :Config) :Result = {
     // build the url to retrieve this user's entries
     val url = 
       "http://friendfeed.com/api/feed/user/" + config.username + "?format=xml"
@@ -117,7 +117,7 @@ object FriendFeedSpider
                     val ffId :String,
                     val userProfile :Profile)
 
-  case class Result (val entries :Seq[Entry]) extends Spider.Result
+  case class Result (val entries :Seq[Entry])
 
   def configBuilder () = new Spider.ConfigBuilder {
     def username (username :String) = { add("username", username); this }
