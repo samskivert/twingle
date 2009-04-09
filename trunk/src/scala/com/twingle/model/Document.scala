@@ -9,7 +9,7 @@ import java.util.Date
 import com.twingle.persist.DatabaseObject
 
 /**
- * Contains data for a document stored in the database.
+ * Contains data for a Document stored in the database.
  */
 class Document extends AnyRef with DatabaseObject
 {
@@ -32,6 +32,9 @@ class Document extends AnyRef with DatabaseObject
   def lastModified :Option[Date] = optA(dateM, "last_modified").data
 }
 
+/**
+ * Document utility methods.
+ */
 object Document
 {
   def builder = new DatabaseObject.Builder {
