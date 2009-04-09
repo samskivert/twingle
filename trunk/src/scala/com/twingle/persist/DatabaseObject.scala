@@ -101,6 +101,7 @@ trait DatabaseObject
 
   // this sucks, why aren't values and methods from DatabaseObject in scope in my trait?
   protected def uuidM = DatabaseObject.uuidM
+  protected def booleanM = DatabaseObject.booleanM
   protected def stringM = DatabaseObject.stringM
   protected def intM = DatabaseObject.intM
   protected def dateM = DatabaseObject.dateM
@@ -117,14 +118,22 @@ trait DatabaseObject
 object DatabaseObject
 {
   class Builder {
+    // oh scala, I thought you were supposed to save me from this shit
+    protected def add (name :String, value :Int) {
+      _map += (name -> intM.marshal(value))
+    }
+    protected def add (name :String, value :Boolean) {
+      _map += (name -> booleanM.marshal(value))
+    }
+
     protected def add[T <: AnyRef] (name :String, value :T) {
       _map += (name -> marshalers.get(value.getClass).get.asInstanceOf[Marshaler[T]].marshal(value))
     }
 
     protected def add[T <: AnyRef] (name :String, value :Option[T]) {
       value match {
-        case None => //
-          case Some(v) => add(name, v)
+        case None => // nothing doing
+        case Some(v) => add(name, v)
       }
     }
 
@@ -136,8 +145,6 @@ object DatabaseObject
 
     private[this] var _map = Map[String, String]()
   }
-
-  def builder = new Builder
 
   /** Used to convert strings to and from target data types. */
   protected trait Marshaler[T] {
@@ -154,7 +161,13 @@ object DatabaseObject
     def unmarshal (value :String) = UUID.fromString(value)
   }
 
-  /** Creates a marshaler for {@link String} fields. */
+  /** Creates a marshaler for Boolean fields. */
+  protected val booleanM :Marshaler[Boolean] = new Marshaler[Boolean] {
+    def marshal (value :Boolean) = value.toString
+    def unmarshal (value :String) = java.lang.Boolean.parseBoolean(value)
+  }
+
+  /** Creates a marshaler for String fields. */
   protected val stringM :Marshaler[String] = new Marshaler[String] {
     def marshal (value :String) = value
     def unmarshal (value :String) = value
@@ -180,6 +193,7 @@ object DatabaseObject
 
   protected val marshalers = scala.collection.mutable.Map[Class[_], Marshaler[_]]()
   marshalers += (classOf[UUID] -> uuidM)
+  marshalers += (classOf[Boolean] -> booleanM)
   marshalers += (classOf[String] -> stringM)
   marshalers += (classOf[Int] -> intM)
   marshalers += (classOf[Date] -> dateM)
