@@ -69,7 +69,7 @@
   <target name="compile" depends="prepare">
     <taskdef resource="scala/tools/ant/antlib.xml" classpathref="scala.classpath"/>
 
-    <scalac srcdir="${ssrc.dir}" destdir="${classes.dir}"
+    <scalac srcdir="${ssrc.dir}" destdir="${classes.dir}" deprecation="on"
             classpathref="twingle.classpath" force="changed">
       <include name="**/*.scala"/>
     </scalac>
