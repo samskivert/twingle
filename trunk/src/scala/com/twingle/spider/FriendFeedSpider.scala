@@ -93,7 +93,7 @@ case class FriendFeedSpiderResult (val entries :Seq[FriendFeedEntry])
  */
 class FriendFeedSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
   def crawl (configs :Seq[SpiderConfig]) :Seq[SpiderResult] =
-    configs.map(_ match { case c :FriendFeedSpiderConfig => getUserPosts(c) })
+    configs.map(c => getUserPosts(c.asInstanceOf[FriendFeedSpiderConfig]))
 
   def getUserPosts (config :FriendFeedSpiderConfig) :SpiderResult = {
     // build the url to retrieve this user's entries
