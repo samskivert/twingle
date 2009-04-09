@@ -3,6 +3,7 @@
 
 package com.twingle.spider
 
+import com.twingle.daemon.Job
 import com.twingle.persist.DatabaseObject
 
 /**
