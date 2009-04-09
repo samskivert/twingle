@@ -82,18 +82,22 @@ trait DatabaseObject
   /** Creates an optional attribute. */
   protected def optA[T] (marsh :Marshaler[T], name :String) = new OptAttr[T](marsh, name)
 
-//   /** Creates an attribute for an optional attribute of a database object. */
-//   protected [T] def listA :Attr[T] = new Attr[T]() {
-//     /** List attribute data is wrapped in a List. */
-//     type Container = List[T]
+  /** Represents a list attribute. */
+  protected class ListAttr[T] (marsh :Marshaler[T], name :String) extends Attr[T](marsh, name) {
+    /** List attribute data is wrapped in a List. */
+    type Container = List[T]
 
-//     /** Returns the head of our list or the default if the list is empty. */
-//     def | (default :T) :T = if (data.isEmpty) default else data.head
+    /** Returns the head of our list or the default if the list is empty. */
+    def | (default :T) :T = if (data.isEmpty) default else data.head
 
-//     def data :List[T] = match (source) {
-//       case None => Empty
-//       case Some(text) => // TODO
-//   }
+    def data :List[T] = value(name) match {
+      case None => Nil
+      case Some(text) => text.split("\t").map(marsh.unmarshal).toList // TODO: better separator?
+    }
+  }
+
+  /** Creates an attribute for an optional attribute of a database object. */
+  protected def listA[T] (marsh :Marshaler[T], name :String) = new ListAttr[T](marsh, name)
 
   // this sucks, why aren't values and methods from DatabaseObject in scope in my trait?
   protected def uuidM = DatabaseObject.uuidM
