@@ -22,14 +22,15 @@ object Twingled
     val env = new Actor with Env {
       val db = tdb
       def queueJob (job :Job) {
-        self ! job
+        this ! job
       }
 
       def act () {
         loop {
           react {
             case (job :Job) => job.run(this)
-            case (sched :Scheduler) => sched.schedule(self)
+            case (sched :Scheduler) => sched.schedule(this)
+            case (msg :AnyRef) => log.warning("Got unknown message", "msg", msg)
           }
         }
       }
