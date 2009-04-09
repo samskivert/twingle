@@ -47,12 +47,10 @@ case class MailSpiderResult (val messages :Seq[MailMessage])
 
 class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
   def crawl (configs :Seq[SpiderConfig]) :Seq[SpiderResult] =
-    configs.map(_ match { case c :MailSpiderConfig => fetchMail(c) })
+    configs.map(c => fetchMail(c.asInstanceOf[MailSpiderConfig]))
 
-  def fetchMail (config :MailSpiderConfig) :MailSpiderResult = {
+  def fetchMail (config :MailSpiderConfig) :Option[MailSpiderResult] = {
     try {
-      var messages :List[MailMessage] = Nil
-
       // get a base mail properties object
       val props :Properties = System.getProperties
 
@@ -64,68 +62,24 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
       val store :Store = session.getStore(config.protocol)
       store.connect(config.host, config.port, config.username, config.password)
 
-      var folder :Folder = store.getDefaultFolder
-      if (folder == null) {
-        log.warning("No default folder", "config", config)
-        return null
-      }
+      // get the default folder from the store, which is the only
+      // folder we'll bother fetching messages from, at least for now
+      val folder :Folder = store.getDefaultFolder
 
-      val mbox :String = "INBOX"
-      folder = folder.getFolder(mbox)
-      if (folder == null) {
-        log.warning("Couldn't look up main inbox folder.")
-        return null
-      }
+      // try to pull down all messages
+      val folderMessages :Option[Seq[MailMessage]] = fetchFolderMessages(folder)
 
-      // try to open read/write and if that fails try read-only
-      try {
-        folder.open(Folder.READ_WRITE)
-
-      } catch {
-        case e :MessagingException => folder.open(Folder.READ_ONLY)
-      }
-
-      val totalMessages :Int = folder.getMessageCount
-      if (totalMessages == 0) {
-        log.warning("Empty folder.")
+      // close down the folder and store
+      if (folder != null) {
         folder.close(false)
-        store.close
-        return null
       }
-
-      val newMessages :Int = folder.getNewMessageCount
-      log.info("Total messages = " + totalMessages)
-      log.info("New messages = " + newMessages)
-      log.info("-------------------------------")
-
-      // Attributes & Flags for all messages ..
-      val msgs = folder.getMessages
-
-      // Use a suitable FetchProfile
-      val fp :FetchProfile = new FetchProfile
-      fp.add(FetchProfile.Item.ENVELOPE)
-      fp.add(FetchProfile.Item.FLAGS)
-      fp.add("X-Mailer")
-      folder.fetch(msgs, fp)
-
-      for (i <- 0 until msgs.length) {
-        log.info("--------------------------")
-        log.info("MESSAGE #" + (i + 1) + ":")
-
-        val m = msgs(i)
-        dumpEnvelope(m)
-        // dumpPart(m)
-
-        // tack the message onto the main message list
-        messages = MailMessage(m.getSubject) :: messages
-      }
-
-      // wrap up
-      folder.close(false)
       store.close
 
       // construct the final result record with all messages
-      MailSpiderResult(messages)
+      folderMessages match {
+        case Some(m) => Some(MailSpiderResult(m))
+        case None => None
+      }
 
     } catch {
       case e :Exception => {
@@ -133,6 +87,45 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher) {
         return null
       }
     }
+  }
+
+  /**
+   * Fetches all messages in the supplied {@link Folder} and returns
+   * them as a sequence of {@link MailMessage} records.
+   */
+  def fetchFolderMessages (folder :Folder) :Option[Seq[MailMessage]] = {
+    if (folder == null) {
+      log.info("No default folder.")
+      return None
+    }
+
+    // open the folder for reading messages
+    folder.open(Folder.READ_ONLY)
+
+    // get a count of total messages in the folder
+    val totalCount :Int = folder.getMessageCount
+    if (totalCount == 0) {
+      log.info("No messages in folder")
+      return None
+    }
+
+    // get a count of new messages in the folder
+    val newCount :Int = folder.getNewMessageCount
+    log.info("Message count", "folder", folder, "total", ""+totalCount, 
+             "new", ""+newCount)
+
+    // retrieve all messages from the folder
+    val msgs = folder.getMessages
+
+    // build fetch profile to pull down specifically sought data
+    val fp :FetchProfile = new FetchProfile
+    fp.add(FetchProfile.Item.ENVELOPE)
+    fp.add(FetchProfile.Item.FLAGS)
+    fp.add("X-Mailer")
+    folder.fetch(msgs, fp)
+
+    // build our final list of mail messages from the message records
+    Some(msgs.map(m => MailMessage(m.getSubject)))
   }
 
   def dumpEnvelope (m :Message) {
