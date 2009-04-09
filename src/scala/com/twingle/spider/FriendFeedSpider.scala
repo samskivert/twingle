@@ -35,12 +35,10 @@ class FriendFeedSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
       "http://friendfeed.com/api/feed/user/" + config.username + "?format=xml"
 
     // submit the request, only using authentication if required
-    val rsp = if (config.remoteKey != null) {
-      urlFetcher.getAuthedUrl(url, "friendfeed.com", config.username, 
-                              config.remoteKey)
-
-    } else {
-      urlFetcher.getUrl(url)
+    val rsp = config.remoteKey match {
+      case Some(remoteKey) =>
+        urlFetcher.getAuthedUrl(url, "friendfeed.com", config.username, remoteKey)
+      case None => urlFetcher.getUrl(url)
     }
 
     // turn the response into an xml document
@@ -94,7 +92,7 @@ object FriendFeedSpider
     def username () :String = reqA(stringM, "username").data
 
     /** The FriendFeed account's remote key. */
-    def remoteKey () :String = reqA(stringM, "remoteKey").data
+    def remoteKey () :Option[String] = optA(stringM, "remoteKey").data
   }
 
   /** Describes a service for which posts may be seen in a user's FriendFeed feed. */
@@ -128,18 +126,21 @@ object FriendFeedSpider
   }
 }
 
-object FriendFeedSpiderApp {
+object FriendFeedSpiderApp
+{
   def main (args :Array[String]) {
     // read command-line arguments
     if (args.length < 1) {
       log.warning("No username specified.")
       exit
     }
-    val username = args(0)
-    val remoteKey = if (args.length > 1) args(1) else null
 
+    var builder = FriendFeedSpider.configBuilder.username(args(0))
+    if (args.length > 1) {
+      builder = builder.remoteKey(args(1))
+    }
     // construct the user list to be queried
-    val configs = List(FriendFeedSpider.configBuilder.username(username).remoteKey(remoteKey).build)
+    val configs = List(builder.build)
 
     // query friendfeed for the latest posts
     val crawler = new FriendFeedSpider(new URLFetcher)
@@ -147,4 +148,3 @@ object FriendFeedSpiderApp {
     results.foreach(log.info(_))
   }
 }
-
