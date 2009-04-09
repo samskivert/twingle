@@ -10,15 +10,6 @@ import scala.xml.{Node, XML}
 
 import com.twingle.Log.log
 
-/** Describes a Twitter user whose friend statuses are to be crawled. */
-case class TwitterSpiderConfig (val username :String, val password :String) 
-  extends SpiderConfig {
-  protected def toString (buf :StringBuffer) = {
-    buf.append("username=").append(username)
-    buf.append(", password=").append(password)
-  }
-}
-
 object TwitterSpiderApp {
   def main (args :Array[String]) {
     // read command-line arguments
@@ -30,7 +21,8 @@ object TwitterSpiderApp {
     val password = args(1)
 
     // construct the user list to be queried
-    val configs = List(TwitterSpiderConfig(username, password))
+    val configs = List(TwitterSpiderConfig.builder.
+                       enabled(true).runEvery(60).username(username).password(password).build)
 
     // query twitter for the latest statuses
     val spider = new TwitterSpider(new URLFetcher)
