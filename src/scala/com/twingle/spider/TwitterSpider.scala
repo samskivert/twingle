@@ -12,15 +12,14 @@ import com.twingle.Log.log
 import com.twingle.daemon.{Env, Job}
 import com.twingle.model.Document
 
-class TwitterSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
+class TwitterSpider (val urlFetcher :URLFetcher) extends Spider
 {
   import TwitterSpider._
 
   def getFriendsTimeline (config :Config) :Seq[Tweet] = {
     // submit request for specified user's latest friend status timeline
     val url = "http://twitter.com/statuses/friends_timeline.xml"
-    val rsp = urlFetcher.getAuthedUrl(url, "twitter.com", config.username,
-                                      config.password)
+    val rsp = urlFetcher.getAuthedUrl(url, "twitter.com", config.username, config.password)
 
     // turn the response into an xml document
     val doc = XML.loadString(rsp.body)
@@ -39,7 +38,7 @@ class TwitterSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
     val text = (e \ "text").text
 
     val userElem = (e \ "user")
-      val userId = (userElem \ "id").text.toInt
+    val userId = (userElem \ "id").text.toInt
     val userName = (userElem \ "name").text
     val screenName = (userElem \ "screen_name").text
 

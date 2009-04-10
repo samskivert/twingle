@@ -9,6 +9,8 @@ import java.util.Date
 import scala.xml.{Node, XML}
 
 import com.twingle.Log.log
+import com.twingle.daemon.{Env, Job}
+import com.twingle.model.Document
 
 /**
  * The main crawler for fetching a user's posts to their FriendFeed feed.
@@ -22,14 +24,11 @@ import com.twingle.Log.log
  *
  * A remote key is required for accessing private user feeds.
  */
-class FriendFeedSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
+class FriendFeedSpider (val urlFetcher :URLFetcher) extends Spider
 {
   import FriendFeedSpider._
 
-  def crawl (configs :Seq[Spider.Config]) :Seq[Result] =
-    configs.map(c => getUserPosts(c.asInstanceOf[Config]))
-
-  def getUserPosts (config :Config) :Result = {
+  def getUserEntries (config :Config) :Seq[Entry] = {
     // build the url to retrieve this user's entries
     val url = 
       "http://friendfeed.com/api/feed/user/" + config.username + "?format=xml"
@@ -49,10 +48,7 @@ class FriendFeedSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
 
     // parse out the user's posted entries
     val entryElements = (doc \\ "entry")
-    val entries = entryElements.map(parseEntryElement(_))
-
-    // create the final spider result
-    Result(entries)
+    entryElements.map(parseEntryElement(_))
   }
 
   protected def parseEntryElement (e :Node) :Entry = {
@@ -93,6 +89,17 @@ object FriendFeedSpider
 
     /** The FriendFeed account's remote key. */
     def remoteKey () :Option[String] = optA(stringM, "remoteKey").data
+
+    def createJob () = new Job() {
+      def run (env :Env) {
+        val spider = new FriendFeedSpider(new URLFetcher)
+        spider.getUserEntries(Config.this).foreach(e => env.db.store(toDocument(e)))
+      }
+
+      def toDocument (e :Entry) =
+        Document.builder.name(e.title).created(e.published).lastModified(e.updated).
+          location(e.link).build
+    }
   }
 
   /** Describes a service for which posts may be seen in a user's FriendFeed feed. */
@@ -117,8 +124,6 @@ object FriendFeedSpider
                     val ffId :String,
                     val userProfile :Profile)
 
-  case class Result (val entries :Seq[Entry])
-
   def configBuilder () = new Spider.ConfigBuilder {
     def username (username :String) = { add("username", username); this }
     def remoteKey (remoteKey :String) = { add("remoteKey", remoteKey); this }
@@ -135,16 +140,16 @@ object FriendFeedSpiderApp
       exit
     }
 
+    // construct the user config to be queried
     var builder = FriendFeedSpider.configBuilder.username(args(0))
     if (args.length > 1) {
       builder = builder.remoteKey(args(1))
     }
-    // construct the user list to be queried
-    val configs = List(builder.build)
+    val config = builder.build
 
-    // query friendfeed for the latest posts
-    val crawler = new FriendFeedSpider(new URLFetcher)
-    val results = crawler.crawl(configs)
-    results.foreach(log.info(_))
+    // query friendfeed for the user's latest entries
+    val spider = new FriendFeedSpider(new URLFetcher)
+    val entries = spider.getUserEntries(config)
+    entries.foreach(log.info(_))
   }
 }
