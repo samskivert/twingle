@@ -11,15 +11,14 @@ import javax.mail.Flags.Flag
 import javax.mail.internet.{InternetAddress, MimeMultipart}
 
 import com.twingle.Log.log
+import com.twingle.daemon.{Env, Job}
+import com.twingle.model.Document
 
-class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
+class MailSpider extends Spider
 {
   import MailSpider._
 
-  def crawl (configs :Seq[Spider.Config]) :Seq[Result] =
-    configs.flatMap(c => fetchMail(c.asInstanceOf[Config]))
-
-  def fetchMail (config :Config) :Option[Result] = {
+  def fetchMail (config :Config) :Seq[MailMessage] = {
     try {
       // get a base mail properties object
       val props :Properties = System.getProperties
@@ -38,23 +37,19 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
       val subFolder = folder.getFolder(mbox)
 
       // try to pull down all messages
-      val folderMessages :Option[Seq[MailMessage]] =
-        fetchFolderMessages(subFolder)
+      val folderMessages :Seq[MailMessage] = fetchFolderMessages(subFolder)
 
       // close down the folders and store
       subFolder.close(false)
       store.close
 
-      // construct the final result record with all messages
-      folderMessages match {
-        case Some(m) => Some(Result(m))
-        case None => None
-      }
+      // return any messages obtained
+      folderMessages
 
     } catch {
       case e :Exception => {
         log.warning("Failed fetching mail", e)
-        return null
+        return List[MailMessage]()
       }
     }
   }
@@ -63,7 +58,7 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
    * Fetches all messages in the supplied {@link Folder} and returns
    * them as a sequence of {@link MailMessage} records.
    */
-  def fetchFolderMessages (folder :Folder) :Option[Seq[MailMessage]] = {
+  def fetchFolderMessages (folder :Folder) :Seq[MailMessage] = {
     // open the folder for reading messages
     folder.open(Folder.READ_ONLY)
 
@@ -71,7 +66,7 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
     val totalCount :Int = folder.getMessageCount
     if (totalCount == 0) {
       log.info("No messages in folder")
-      return None
+      return List[MailMessage]()
     }
 
     // get a count of new messages in the folder
@@ -91,7 +86,7 @@ class MailSpider (urlFetcher :URLFetcher) extends Spider(urlFetcher)
     folder.fetch(msgs, fp)
 
     // build our final list of mail messages from the message records
-    Some(msgs.map(m => constructMailMessage(m)))
+    msgs.map(m => constructMailMessage(m))
   }
 
   def constructMailMessage (m :Message) :MailMessage = {
@@ -231,11 +226,16 @@ object MailSpider
 
     /** Whether or not to enable debug mode. */
     def debug () :Boolean = reqA(booleanM, "debug").data
+
+    def createJob () = new Job() {
+      def run (env :Env) {
+        val spider = new MailSpider
+        spider.fetchMail(Config.this).foreach(t => env.db.store(toDocument(t)))
+      }
+
+      def toDocument (m :MailMessage) = Document.builder.name(m.subject).created(m.date).build
+    }
   }    
-
-  case class Result (val messages :Seq[MailMessage])
-
-  class MailException (msg: String) extends Exception(msg)
 
   // TODO: store flags e.g. answered, draft, seen, etc.; other headers?
   case class MailMessage (val from :String,
@@ -266,11 +266,11 @@ object MailSpiderApp {
 
     val port = -1
     val debug = true
-    val configs = List(MailSpider.configBuilder.protocol(args(0)).host(args(1)).port(port).
-                       username(args(2)).password(args(3)).debug(debug).build)
+    val config = MailSpider.configBuilder.protocol(args(0)).host(args(1)).port(port).
+                   username(args(2)).password(args(3)).debug(debug).build
 
-    val crawler = new MailSpider(new URLFetcher)
-    val results = crawler.crawl(configs)
-    results.foreach(log.info(_))
+    val spider = new MailSpider
+    val messages = spider.fetchMail(config)
+    messages.foreach(log.info(_))
   }
 }

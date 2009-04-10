@@ -5,8 +5,7 @@ package com.twingle.spider
 
 import com.twingle.persist.DatabaseObject
 
-abstract class Spider (val urlFetcher :URLFetcher) {
-}
+abstract class Spider
 
 /**
  * Spider utility methods.
