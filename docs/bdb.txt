@@ -18,14 +18,15 @@ use --prefix with configure to change destination directory.
 You will need to set your LD_LIBRARY_PATH (or on MacOS,
 DYLD_LIBRARY_PATH) to the install directory's lib/ directory, e.g.:
 
-Top level docs are in db-4.7.25/docs/index.html, see "Java" under
-"Getting Started with Data Storage" for a good overview of everything.
-
-Javadoc API docs are under db-4.7.25/docs/java/index.html.
-
 % export DYLD_LIBRARY_PATH=/usr/local/BerkeleyDB.4.7/lib
 
 Alternatively we can add bdb.home to build.properties and fiddle ant
 to set java.library.path which appears to require some special
 incantations.  The above was faster for initial rudimentary testing
 antics.
+
+Top level docs are in db-4.7.25/docs/index.html, see "Java" under
+"Getting Started with Data Storage" for a good overview of everything,
+and in particular "Part II: Programming with the Base API".
+
+Javadoc API docs are under db-4.7.25/docs/java/index.html.
