@@ -118,16 +118,9 @@ trait DatabaseObject
 object DatabaseObject
 {
   class Builder {
-    // oh scala, I thought you were supposed to save me from this shit
-    protected def add (name :String, value :Int) {
-      _map += (name -> intM.marshal(value))
-    }
-    protected def add (name :String, value :Boolean) {
-      _map += (name -> booleanM.marshal(value))
-    }
-
-    protected def add[T <: AnyRef] (name :String, value :T) {
-      _map += (name -> marshalers.get(value.getClass).get.asInstanceOf[Marshaler[T]].marshal(value))
+    protected def add[T <: Any] (name :String, value :T) {
+      _map += (name -> marshalers.get(value.asInstanceOf[AnyRef].getClass).
+               get.asInstanceOf[Marshaler[T]].marshal(value))
     }
 
     protected def add[T <: AnyRef] (name :String, value :Option[T]) {
