@@ -26,26 +26,45 @@ class RSSFeedSpider (val urlFetcher :URLFetcher) extends Spider
     // turn the response into an xml document
     val doc = XML.loadString(rsp.body)
 
-    if (isAtomFeed(doc)) {
-      // parse out any posted articles
-      log.info("Parsing atom feed.")
-      val entryElements = (doc \\ "entry")
+    val entryElements = (doc \\ "entry")
+    if (!entryElements.isEmpty) {
+      // looks like an atom feed
       entryElements.flatMap(parseAtomEntryElement(_))
 
     } else {
-      log.info("Unknown feed format.")
+      val itemElements = (doc \\ "item")
+      if (!itemElements.isEmpty) {
+        // looks like a standard rss feed
+        itemElements.flatMap(parseItemElement(_))
 
-      // just return an empty list
-      List[Article]()
+      } else {
+        log.warning("Unknown feed format", "url", config.url)
+
+        // just return an empty list
+        List[Article]()
+      }
     }
   }
 
-  /** Returns whether the RSS feed rooted under the supplied XML node is an Atom feed. */
-  protected def isAtomFeed (doc :Node) :Boolean = {
-    // XXX for some reason below returns nothing, need to investigate
-    // ((doc \ "feed" \ "@xmlns").text == "http://www.w3.org/2005/Atom")
-    true
-  }
+  /** Parses the supplied xml node representing an "item" element in a standard RSS feed. */
+  protected def parseItemElement (e :Node) :Option[Article] = {
+    val title = (e \ "title").text
+    val guid = (e \ "guid").text
+    val link = (e \ "link").text
+    val publishedStr = (e \ "pubDate").text
+    val published = parseDate(publishedStr) match {
+      case (Some(s)) => s
+      case None => {
+        log.debug("Unparseable date", "date", publishedStr)
+        // fall back to the current time
+        new Date
+      }
+    }
+    val content = (e \ "description").text
+    val updated = published
+
+    Some(Article(published, updated, guid, title, link, content))
+}
 
   /** Parses the supplied xml node representing an "entry" element in an Atom-formatted RSS feed. */
   protected def parseAtomEntryElement (e :Node) :Option[Article] = {
@@ -69,8 +88,8 @@ class RSSFeedSpider (val urlFetcher :URLFetcher) extends Spider
       case (Some(s)) => s
       case None => {
         log.debug("Unparseable date", "date", updatedStr)
-        // fall back to the current time
-        new Date
+        // fall back to the published date
+        published
       }
     }
 
@@ -93,7 +112,10 @@ class RSSFeedSpider (val urlFetcher :URLFetcher) extends Spider
   
   private[this] val _defaultDateFormat = new SimpleDateFormat
   private[this] val _rfc339DateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss'Z'")
-  private[this] val _dateFormats = List(_defaultDateFormat, _rfc339DateFormat)
+  // Fri, 10 Apr 2009 12:15:16 +0000
+  private[this] val _rssDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z")
+
+  private[this] val _dateFormats = List(_defaultDateFormat, _rfc339DateFormat, _rssDateFormat)
 }
 
 object RSSFeedSpider
@@ -141,6 +163,7 @@ object RSSFeedSpiderApp
     val config = RSSFeedSpider.configBuilder.url(args(0)).build
     val spider = new RSSFeedSpider(new URLFetcher)
     val articles = spider.getFeedArticles(config)
-    articles.foreach(a => log.info("Article ", "title", a.title, "link", a.link, "guid", a.guid))
+    articles.foreach(a => log.info("Article", "title", a.title, "link", a.link, "guid", a.guid,
+                                   "published", a.published))
   }
 }
