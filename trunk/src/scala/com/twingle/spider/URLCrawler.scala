@@ -9,20 +9,12 @@ import scala.io.Source
 
 import com.twingle.Log.log
 
-case class URLDocument (location :String, name :String, text :String,
-                        bits :String, created :Date, lastModified :Date)
-{
-  override def toString () = {
-    val buf :StringBuffer = new StringBuffer
-    buf.append("[location=").append(location)
-    buf.append(", name=").append(name)
-    buf.append(", textLen=").append(if (text != null) text.size else 0)
-    buf.append(", bitsLen=").append(if (bits != null) bits.size else 0)
-    buf.append(", created=").append(created)
-    buf.append(", lastModified=").append(lastModified)
-    buf.append("]").toString
-  }
-}
+case class URLDocument (val location :String,
+                        val name :String,
+                        val text :String,
+                        val bits :String,
+                        val created :Date,
+                        val lastModified :Date)
 
 object URLCrawlerApp {
   def main (args :Array[String]) {
