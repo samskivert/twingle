@@ -1,0 +1,49 @@
+Twingle is now also experimenting with SQLite as a persistent store
+for the database subsystem.
+
+Steps to build and install SQLite and associated Java JDBC interface.
+
+Download SQLite 3.6.13 (sqlite-amalgamation-3.6.13.tar.gz) from:
+
+http://www.sqlite.org/download.html
+
+Download SQLite Java Wrapper (javasqlite-20090409.tar.gz) from:
+
+http://www.ch-werner.de/javasqlite/
+
+Install SQLite:
+
+% cd sqlite-3.6.13
+% ./configure
+% make
+% make install
+
+Install SQLite Java Wrapper:
+
+% cd javasqlite-20090409
+% ./configure --with-jdk=/System/Library/Frameworks/JavaVM.framework/Home
+
+Edit Makefile to make two changes:
+
+1. change JNIINCLUDE definition to:
+
+JNIINCLUDE = -I/System/Library/Frameworks/JavaVM.framework/Headers
+
+2. add a target:
+
+libsqlite_jni.jnilib: native/sqlite_jni.h native/sqlite_jni.c
+        $(CC) -c $(CFLAGS) native/sqlite_jni.c -o native/sqlite_jni.o
+        $(CC) -dynamiclib -o libsqlite_jni.jnilib native/sqlite_jni.o \
+            -framework JavaVM -L/usr/local/lib -lsqlite3 
+
+% make
+% sudo make install
+
+Above installs libs into /usr/local/lib and the jar file into /usr/local/share/java.
+
+You can change lib placement with --prefix and jar placement with
+--with-jardir configure options.
+
+Above MacOS-specific mods taken from:
+
+http://www.ch-werner.de/javasqlite/scnotes.txt
