@@ -1,0 +1,8 @@
+#summary Review of various libraries for potential use as the database persistent store.
+
+= Considered =
+
+  * [http://www.oracle.com/technology/products/berkeley-db/index.html Berkeley DB]
+  * [http://db.apache.org/derby/ Derby]
+  * [http://hsqldb.org/ HSQLDB]
+  * [http://www.sqlite.org/ SQLite]
