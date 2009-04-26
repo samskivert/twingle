@@ -5,8 +5,6 @@ package com.twingle.persist
 
 import java.util.UUID
 
-import scala.collection.mutable.Map
-
 /**
  * A trivial, in-memory implementation of {@link Database}.
  */
@@ -56,7 +54,7 @@ class TrivialDatabase extends AnyRef with Database
     })
   }
 
-  protected val _db = Map[UUID, DatabaseObject]()
+  protected val _db = scala.collection.mutable.Map[UUID, DatabaseObject]()
 }
 
 object TrivialDatabase
