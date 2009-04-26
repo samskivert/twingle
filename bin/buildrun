@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# first we run ant to build everything
+ant
+if [ $? != 0 ]; then
+    echo "Compilation failed."
+    exit 255
+fi
+
+# then we run whatever was needed
+`dirname $0`/runscala "$*"
