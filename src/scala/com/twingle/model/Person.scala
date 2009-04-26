@@ -11,7 +11,7 @@ import com.twingle.persist.DatabaseObject
 class Person extends AnyRef with DatabaseObject
 {
   /** This person's primary name. */
-  def name () :String = optA(stringM, "name") | "<unknown>"
+  def name () :Option[String] = optA(stringM, "name").data
 
   /** Other names by which this person is known. */
   def aliases () :List[String] = listA(stringM, "aliases").data
