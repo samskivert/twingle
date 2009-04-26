@@ -117,21 +117,24 @@ trait DatabaseObject
 object DatabaseObject
 {
   class Builder {
-    protected def add[T <: Any] (name :String, value :T) {
+    protected def add[T <: Any] (name :String, value :T) :this.type = {
       _map += (name -> marsh(value).marshal(value))
+      this
     }
 
-    protected def add[T <: Any] (name :String, value :Option[T]) {
+    protected def add[T <: Any] (name :String, value :Option[T]) :this.type = {
       value match {
         case None => // nothing doing
         case Some(v) => add(name, v)
       }
+      this
     }
 
-    protected def add[T <: Any] (name :String, value :List[T]) {
+    protected def add[T <: Any] (name :String, value :List[T]) :this.type = {
       if (!value.isEmpty) {
         _map += (name -> value.map(marsh(value.head).marshal).mkString("\t"))
       }
+      this
     }
 
     protected def build[T <: DatabaseObject] (obj :T) = {

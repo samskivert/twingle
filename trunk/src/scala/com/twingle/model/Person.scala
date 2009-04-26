@@ -32,11 +32,11 @@ class Person extends AnyRef with DatabaseObject
 object Person
 {
   def builder = new DatabaseObject.Builder {
-    def name (name :String) = { add("name", name); this }
-    def aliases (aliases :List[String]) = { add("aliases", aliases); this }
-    def addresses (addresses :List[String]) = { add("addresses", addresses); this }
-    def twitter (twitter :String) = { add("twitter", twitter); this }
-    def friendfeed (friendfeed :String) = { add("friendfeed", friendfeed); this }
+    def name (name :String) = add("name", name)
+    def aliases (aliases :List[String]) = add("aliases", aliases)
+    def addresses (addresses :List[String]) = add("addresses", addresses)
+    def twitter (twitter :String) = add("twitter", twitter)
+    def friendfeed (friendfeed :String) = add("friendfeed", friendfeed)
     def build :Person = build(new Person)
   }
   // TODO: how to expand an existing record?
