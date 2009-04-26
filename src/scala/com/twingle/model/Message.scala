@@ -30,10 +30,10 @@ class Message extends Document
 object Message
 {
   def builder = new Document.Builder {
-    def subject (subject :String) = { add("subject", subject); this }
-    def author (author :UUID) = { add("author", author); this }
-    def recipients (recipients :List[UUID]) = { add("recipients", recipients); this }
-    def conversation (conversation :UUID) = { add("conversation", conversation); this }
+    def subject (subject :String) = add("subject", subject)
+    def author (author :UUID) = add("author", author)
+    def recipients (recipients :List[UUID]) = add("recipients", recipients)
+    def conversation (conversation :UUID) = add("conversation", conversation)
     def build :Message = build(new Message)
   }
 }
