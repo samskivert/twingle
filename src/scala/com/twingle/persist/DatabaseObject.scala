@@ -139,6 +139,7 @@ object DatabaseObject
 
     protected def build[T <: DatabaseObject] (obj :T) = {
       _map += ("id" -> uuidM.marshal(UUID.randomUUID))
+      _map += ("_type_" -> obj.getClass.getName)
       obj.init(_map)
       obj
     }
