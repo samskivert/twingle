@@ -152,9 +152,6 @@ object DatabaseObject
     /** Returns all attributes of the object that contain Dates. */
     val dateAttrs = clazz.getMethods.filter(m => isType(m, classOf[Date]))
 
-// TODO: nix this if we decide to nix the raw attr getter methods
-//     private[this] def attrGetter (method :Method) = method.getName().endsWith("_")
-
     private[this] def isType (method :Method, target :Class[_]) = method.getGenericReturnType match {
       case clazz :Class[_] => (clazz == target)
       case ptype :ParameterizedType => (ptype.getActualTypeArguments.length == 1 &&
