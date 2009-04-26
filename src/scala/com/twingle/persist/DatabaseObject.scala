@@ -119,14 +119,19 @@ object DatabaseObject
 {
   class Builder {
     protected def add[T <: Any] (name :String, value :T) {
-      _map += (name -> marshalers.get(value.asInstanceOf[AnyRef].getClass).
-               get.asInstanceOf[Marshaler[T]].marshal(value))
+      _map += (name -> marsh(value).marshal(value))
     }
 
-    protected def add[T <: AnyRef] (name :String, value :Option[T]) {
+    protected def add[T <: Any] (name :String, value :Option[T]) {
       value match {
         case None => // nothing doing
         case Some(v) => add(name, v)
+      }
+    }
+
+    protected def add[T <: Any] (name :String, value :List[T]) {
+      if (!value.isEmpty) {
+        _map += (name -> value.map(marsh(value.head).marshal).mkString("\t"))
       }
     }
 
@@ -135,6 +140,9 @@ object DatabaseObject
       obj.init(_map)
       obj
     }
+
+    private[this] def marsh[T <: Any] (value :T) =
+      marshalers.get(value.asInstanceOf[AnyRef].getClass).get.asInstanceOf[Marshaler[T]]
 
     private[this] var _map = Map[String, String]()
   }
