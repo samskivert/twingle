@@ -52,7 +52,7 @@ package tests {
         name("Walter Korman").
         twitter("shaper").
         build
-      val doc = Message.builder.
+      val tweet = Message.builder.
         location("twitter://1231232").
         name("Tweet tweet").
         text("@shaper Lulz!").
@@ -62,10 +62,22 @@ package tests {
         recipients(List(shaper.id)).
         build
 
-      expect("twitter://1231232") { doc.location }
-      expect("Tweet tweet") { doc.name }
-      expect(mdb.id) { doc.author }
-      expect(List(shaper.id)) { doc.recipients }
+      expect("twitter://1231232") { tweet.location }
+      expect("Tweet tweet") { tweet.name }
+      expect(mdb.id) { tweet.author }
+      expect(List(shaper.id)) { tweet.recipients }
+
+      val email = Message.builder.
+        location("49F3AECF.10406@threerings.net").
+        subject("hourly panopticons").
+        text("Blah blah teleblah").
+        created(now).
+        lastModified(now).
+        author(mdb.id).
+        recipients(List(shaper.id, mdb.id)).
+        build
+
+      expect(List(shaper.id, mdb.id)) { email.recipients }
     }
   }
 }
