@@ -37,13 +37,15 @@ class Document extends AnyRef with DatabaseObject
  */
 object Document
 {
-  def builder = new DatabaseObject.Builder {
-    def location (location :String) = { add("location", location); this }
-    def name (name :String) = { add("name", name); this }
-    def text (text :String) = { add("text", text); this }
-    def bits (bits :ByteBuffer) = { add("bits", bits); this }
-    def created (created :Date) = { add("created", created); this }
-    def lastModified (lastModified :Date) = { add("last_modified", lastModified); this }
+  class Builder extends DatabaseObject.Builder {
+    def location (location :String) :this.type = { add("location", location); this }
+    def name (name :String) :this.type = { add("name", name); this }
+    def text (text :String) :this.type = { add("text", text); this }
+    def bits (bits :ByteBuffer) :this.type = { add("bits", bits); this }
+    def created (created :Date) :this.type = { add("created", created); this }
+    def lastModified (lastModified :Date) :this.type = { add("last_modified", lastModified); this }
+  }
+  def builder = new Builder {
     def build :Document = build(new Document)
   }
 }
