@@ -24,12 +24,12 @@ trait Database
   /**
    * Searches the database and returns all objects that "match" the supplied query.
    */
-  def find (query :String) :List[DatabaseObject]
+  def find (query :String) :Iterator[DatabaseObject]
 
   /**
    * Searches the database and returns all objects that contain the supplied UUID in any member.
    */
-  def find (id :UUID) :List[DatabaseObject]
+  def find (id :UUID) :Iterator[DatabaseObject]
 
 //   /**
 //    * Creates a new database object with the supplied data. A UUID will be assigned to the newly
