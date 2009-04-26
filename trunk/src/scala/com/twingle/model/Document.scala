@@ -13,11 +13,11 @@ import com.twingle.persist.DatabaseObject
  */
 class Document extends AnyRef with DatabaseObject
 {
-  /** The URL defining this document's location or "<unknown>". */
-  def location :String = optA(stringM, "location") | "<unknown>"
+  /** The URL defining this document's location. */
+  def location :Option[String] = optA(stringM, "location").data
 
-  /** The name of this document or "<unknown>". */
-  def name :String = optA(stringM, "name") | "<unknown>"
+  /** The name of this document. */
+  def name :Option[String] = optA(stringM, "name").data
 
   /** The text of this document. */
   def text :Option[String] = optA(stringM, "text").data

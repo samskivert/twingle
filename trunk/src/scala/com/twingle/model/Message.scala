@@ -11,8 +11,8 @@ import java.util.Date
  */
 class Message extends Document
 {
-  /** The subject of this message or "<none>". */
-  def subject :String = optA(stringM, "subject") | "<none>"
+  /** The subject of this message (an alias for {@link Document#name}. */
+  def subject :Option[String] = name
 
   /** The author of this message. */
   def author :UUID = reqA(uuidM, "author").data
@@ -30,7 +30,7 @@ class Message extends Document
 object Message
 {
   def builder = new Document.Builder {
-    def subject (subject :String) = add("subject", subject)
+    def subject (subject :String) = name(subject) // subject is an alias for "name"
     def author (author :UUID) = add("author", author)
     def recipients (recipients :List[UUID]) = add("recipients", recipients)
     def conversation (conversation :UUID) = add("conversation", conversation)
