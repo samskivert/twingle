@@ -33,7 +33,8 @@ object Person
 {
   def builder = new DatabaseObject.Builder {
     def name (name :String) = { add("name", name); this }
-    // TODO: how to specify aliases, addresses
+    def aliases (aliases :List[String]) = { add("aliases", aliases); this }
+    def addresses (addresses :List[String]) = { add("addresses", addresses); this }
     def twitter (twitter :String) = { add("twitter", twitter); this }
     def friendfeed (friendfeed :String) = { add("friendfeed", friendfeed); this }
     def build :Person = build(new Person)
