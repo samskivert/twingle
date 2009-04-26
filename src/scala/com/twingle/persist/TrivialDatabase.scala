@@ -28,6 +28,11 @@ class TrivialDatabase extends AnyRef with Database
     Nil // TODO
   }
 
+  // from Database
+  def find (id :UUID) :List[DatabaseObject] = {
+    Nil // TODO
+  }
+
 //   // from Database
 //   def make (data :Map[String, String]) :DatabaseObject = {
 //   }
