@@ -26,6 +26,11 @@ trait Database
    */
   def find (query :String) :List[DatabaseObject]
 
+  /**
+   * Searches the database and returns all objects that contain the supplied UUID in any member.
+   */
+  def find (id :UUID) :List[DatabaseObject]
+
 //   /**
 //    * Creates a new database object with the supplied data. A UUID will be assigned to the newly
 //    * created object.
