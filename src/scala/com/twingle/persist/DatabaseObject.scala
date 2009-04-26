@@ -13,7 +13,6 @@ import java.util.UUID
  */
 trait DatabaseObject
 {
-  // annoying! why do I have to do this?
   import DatabaseObject.Marshaler
 
   /** This object's unique identifier. */
@@ -99,7 +98,7 @@ trait DatabaseObject
   /** Creates an attribute for an optional attribute of a database object. */
   protected def listA[T] (marsh :Marshaler[T], name :String) = new ListAttr[T](marsh, name)
 
-  // this sucks, why aren't values and methods from DatabaseObject in scope in my trait?
+  // bring our marshalers into scope
   protected def uuidM = DatabaseObject.uuidM
   protected def booleanM = DatabaseObject.booleanM
   protected def stringM = DatabaseObject.stringM
