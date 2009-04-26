@@ -55,6 +55,7 @@
       <fileset dir="lib" includes="commons-io-1.4.jar"/>
       <fileset dir="lib" includes="commons-logging-1.1.1.jar"/>
       <fileset dir="lib" includes="db-4.7.25.jar"/>
+      <fileset dir="lib" includes="lucene-core-2.4.1.jar"/>
       <fileset dir="lib" includes="mail-1.4.2.jar"/>
       <fileset dir="lib" includes="samskivert.jar"/>
       <fileset dir="lib" includes="scalatest*.jar"/>
