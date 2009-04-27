@@ -12,7 +12,7 @@ import org.mortbay.jetty.servlet.{Context, ServletHolder}
 /**
  * Handles the serving of HTTP requests in the Twingle daemon.
  */
-class HttpServer (port :Int)
+class HttpServer (env :Env, port :Int)
 {
   def start () {
     _server.start()
@@ -32,6 +32,6 @@ class HttpServer (port :Int)
     _server.setHandler(handlers)
 
     // wire up our various servlets
-    context.addServlet(new ServletHolder(classOf[HelloServlet]), "/hello")
+    context.addServlet(new ServletHolder(new HelloServlet(env)), "/hello")
   }
 }
