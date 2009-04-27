@@ -54,25 +54,41 @@ class LuceneProvider (val indexPath :String) extends FullTextService
   }
 
   // from FullTextService
-  def search (query :String) :Iterator[UUID] = {
+  def search (query :String) :Iterator[UUID] = synchronized {
     val parsedQuery = _parser.parse(query)
 
-    // the reader may change, so we need to create a new searcher each time
-    val searcher = new IndexSearcher(getIndexReader)
+    // for performance reasons we reuse the reader and searcher as much as possible, but before
+    // using we have to give the reader a chance to reopen indexes in case they've changed, and if
+    // the reader changes, then the searcher has to change as well.  if we needed to un-synchronize
+    // this method for even more performance purposes, we'd have to rework this to either not cache
+    // the reader and searcher, or use pools, or something else i'm not bothering to think of right
+    // now.
+    refreshSearcher()
 
     // gather all matching lucene documents
     val collector = new ResultCollector
-    searcher.search(parsedQuery, collector)
+    _searcher.search(parsedQuery, collector)
 
     // turn the lucene documents into a list of twingle doc ids
-    def uuid (docId :Int) = UUID.fromString(searcher.doc(docId).get(ID_FIELD))
+    def uuid (docId :Int) = UUID.fromString(_searcher.doc(docId).get(ID_FIELD))
     collector.getMatchDocIds.map(uuid).elements
   }
 
-  protected def getIndexReader :IndexReader = {
-    // give the reader a chance to reopen the index if it's changed.  this will return the current
-    // reader if no change, else a new reader, so we need to update our cached reader reference
-    (_reader = _reader.reopen).asInstanceOf[IndexReader]
+  protected def refreshSearcher () {
+    // save off a reference to our current reader so we can see if it changes subsequently
+    val origReader = _reader
+
+    // per lucene's somewhat wacky api, we give the reader a chance to reopen the index file which
+    // if necessary means it will return a new reader object, else it will return itself
+    val newReader = _reader.reopen
+
+    if (newReader != origReader) {
+      // the indexes must have changed, so save off our new reader
+      _reader = newReader
+
+      // and create a new searcher referencing the new reader
+      _searcher = new IndexSearcher(_reader)
+    }
   }
 
   /**
@@ -84,12 +100,18 @@ class LuceneProvider (val indexPath :String) extends FullTextService
                                               IndexWriter.MaxFieldLength.LIMITED)
 
   /**
-   * Reusable {@link IndexReader} instance with which we search the lucene index for documents
-   * matching user-specified query terms.  Creating these is expensive so we keep one around and
-   * always make sure to call <tt>reopen</tt> before use in case the index has been updated and is
-   * in need of reloading.
+   * Reusable {@link IndexReader} instance with which we read the lucene index of Twingle document
+   * text.  Creating these is expensive so we keep one around and always make sure to call
+   * <tt>reopen</tt> before use in case the index has been updated and is in need of reloading.
    */
   private[this] var _reader :IndexReader = IndexReader.open(indexPath)
+
+  /**
+   * Reusable {@link IndexSearcher} instance with which we search the lucene index for documents
+   * matching user-specified query terms.  Creating these is expensive so we keep one around and
+   * make sure to recreate it if we ever have to create a new {@link IndexReader}.
+   */
+  private[this] var _searcher :IndexSearcher = new IndexSearcher(_reader)
 
   /**
    * Reusable {@link QueryParser} to always search the single field we use for performing
