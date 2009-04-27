@@ -1,0 +1,11 @@
+#summary General TODO items
+
+Unprioritized and up for grabs.
+
+ * FireFox plugin to grab urls as visited, pass along bookmarked urls, and retrieve DOM to allow gathering behind-auth or JavaScript-generated page content.
+ * Safari plugin to provide same functionality as for FF above.
+ * Explore other local hacks to pull browser bookmarks and history from FF and Safari w/o a plugin.
+ * del.icio.us bookmarking service spider
+ * Initial SQLite-based persistent store.
+ * IM spider integration (local hack for Jabber via logs; possible way to grab GTalk, others?)
+ * SMS spider integration (email alias forward; Twitter direct messages; ...)
