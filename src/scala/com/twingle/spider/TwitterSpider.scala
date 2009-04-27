@@ -3,15 +3,10 @@
 
 package com.twingle.spider
 
-import java.io.FileNotFoundException
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import scala.xml.{Node, XML}
-
-import com.sleepycat.db.{BtreeStats, Database, DatabaseConfig, DatabaseEntry, DatabaseException,
-                         DatabaseType, OperationStatus}
-import com.sleepycat.bind.tuple.{TupleBinding, TupleInput, TupleOutput}
 
 import com.twingle.Log.log
 import com.twingle.daemon.{Env, Job}
@@ -84,86 +79,10 @@ object TwitterSpider
                     val screenName :String,
                     val text :String)
 
-  /** Persistence conversion for storage in BDB. */
-  class TweetTupleBinding extends TupleBinding {
-    def objectToEntry (obj :Object, to :TupleOutput) {
-      val t :Tweet = obj.asInstanceOf[Tweet]
-
-      to.writeInt(t.tweetId)
-      to.writeLong(t.createdAt.getTime())
-      to.writeInt(t.userId)
-      to.writeString(t.userName)
-      to.writeString(t.screenName)
-      to.writeString(t.text)
-    }
-
-    def entryToObject (ti :TupleInput) :Object = {
-      val tweetId = ti.readInt
-      val createdAt = new Date(ti.readLong)
-      val userId = ti.readInt
-      val userName = ti.readString
-      val screenName = ti.readString
-      val text = ti.readString
-
-      Tweet(tweetId, createdAt, userId, userName, screenName, text)
-    }
-  }
-
   def configBuilder () = new Spider.ConfigBuilder {
     def username (username :String) = { add("username", username); this }
     def password (password :String) = { add("password", password); this }
     def build :TwitterSpider.Config = build(new TwitterSpider.Config)
-  }
-}
-
-/** Simple demo app to output all tweets stored in the twitter database. */
-object TwitterSpiderShowApp
-{
-  def main (args :Array[String]) {
-    // save each tweet keyed on the username
-    try {
-      // create the database interface object
-      val dbConfig :DatabaseConfig = new DatabaseConfig
-      val twitterDb :Database = new Database("/tmp/twitter.db", null, dbConfig)
-
-      val binding = new TwitterSpider.TweetTupleBinding
-
-      // normally we'd be looking for a tweet with a particular id or username, but for this test
-      // app we want to iterate over all known keys and display them, so we get a total record
-      // count to start off
-      val recordCount :Int = twitterDb.getStats(null, null).asInstanceOf[BtreeStats].getNumData
-      log.info("Reading tweets.", "count", ""+recordCount)
-
-      // print out each record, looking up by record number
-      for (i <- 1 until recordCount) {
-        // set the record number to look up
-        val dbKey :DatabaseEntry = new DatabaseEntry
-        dbKey.setRecordNumber(i)
-
-        // create a new database entry to hold the record data
-        val dbData = new DatabaseEntry
-
-        // look up the record
-        val status :OperationStatus = twitterDb.getSearchRecordNumber(null, dbKey, dbData, null)
-        if (status != OperationStatus.SUCCESS) {
-          log.warning("Failed to fetch record.", "no", ""+i)
-
-        } else {
-          // display the record
-          val tweet = binding.entryToObject(dbData)
-          log.info("Fetched record.", "no", ""+i, "tweet", tweet)
-        }
-      }
-
-      // close the database
-      twitterDb.close
-
-      log.info("Read all tweets.")
-
-    } catch {
-      case de :DatabaseException => log.warning("Database error.", de)
-      case fnfe: FileNotFoundException => log.warning("No such file.", fnfe)
-    }
   }
 }
 
@@ -185,45 +104,6 @@ object TwitterSpiderApp
     // query twitter for the latest statuses
     val spider = new TwitterSpider(new URLFetcher)
     val tweets = spider.getFriendsTimeline(config)
-    // tweets.foreach(log.info(_))
-
-    // save each tweet keyed on the username
-    try {
-      // create the database interface object
-      val dbConfig :DatabaseConfig = new DatabaseConfig
-      dbConfig.setAllowCreate(true)
-      dbConfig.setBtreeRecordNumbers(true)
-      dbConfig.setType(DatabaseType.BTREE)
-      val twitterDb :Database = new Database("/tmp/twitter.db", null, dbConfig)
-
-      // write each tweet to the database
-      val binding = new TwitterSpider.TweetTupleBinding
-
-      log.info("Storing tweets.")
-
-      // we're just testing for now, so we just write tweets out keyed on the author name which is
-      // silly as one author could have multiple tweets and we should probably use the tweet id as
-      // the key instead, but we're just exploring the bdb api right now anyway.
-      tweets.foreach(t => {
-        // build the key from the twitter user screen name
-        val dbKey :DatabaseEntry = new DatabaseEntry(t.screenName.getBytes("UTF-8"))
-
-        // use our custom TupleBinding implementation to serialize the record
-        val dbData :DatabaseEntry = new DatabaseEntry
-        binding.objectToEntry(t, dbData)
-
-        // store the record
-        twitterDb.put(null, dbKey, dbData)
-      })
-
-      // close the database
-      twitterDb.close
-
-      log.info("Stored tweets.")
-
-    } catch {
-      case de :DatabaseException => log.warning("Database error.", de)
-      case fnfe: FileNotFoundException => log.warning("No such file.", fnfe)
-    }
+    tweets.foreach(log.info(_))
   }
 }
