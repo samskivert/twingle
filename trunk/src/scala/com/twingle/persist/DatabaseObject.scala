@@ -7,6 +7,7 @@ import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.nio.ByteBuffer
 import java.util.Date
+import java.util.Properties
 import java.util.UUID
 
 /**
@@ -109,6 +110,17 @@ trait DatabaseObject
 object DatabaseObject
 {
   class Builder {
+    def slurp (props :Properties, prefix :String) :this.type = {
+      var pnames = props.propertyNames
+      while (pnames.hasMoreElements) {
+        val name = pnames.nextElement.asInstanceOf[String]
+        if (name.startsWith(prefix)) {
+          _map += (name.substring(prefix.length) -> props.getProperty(name))
+        }
+      }
+      this
+    }
+
     protected def add[T <: Any] (name :String, value :T) :this.type = {
       _map += (name -> marsh(value).marshal(value))
       this

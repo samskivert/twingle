@@ -7,6 +7,7 @@ import scala.actors.Actor
 import scala.actors.Actor._
 
 import com.twingle.Log.log
+import com.twingle.spider.Spider
 import com.twingle.persist.Database
 
 /**
@@ -22,9 +23,14 @@ class JobExecutor (db :Database)
     _env ! new Scheduler
   }
 
+  def addSpider (spider :Spider.Config) {
+    _spiders = new SpiderState(spider) :: _spiders
+  }
+
   private class Scheduler {
     def schedule (env :Actor) {
-      log.info("TODO!") // TODO
+      val now = System.currentTimeMillis
+      _spiders.foreach(s => s.maybeCreateJob(now))
       requeue(env)
     }
 
@@ -36,7 +42,21 @@ class JobExecutor (db :Database)
     }
   }
 
-  // create an environment that executes jobs one after another
+  private class SpiderState (conf :Spider.Config) {
+    def maybeCreateJob (now :Long) {
+      if (now > _nextInvoke) {
+        _nextInvoke = now + conf.runEvery * 1000L
+        log.info("Queueing spider " + conf.getClass.getName + "...")
+        _env.queueJob(conf.createJob)
+      }
+    }
+    private[this] var _nextInvoke :Long = 0L
+  }
+
+  /** Our list of registered spiders. */
+  private[this] var _spiders = List[SpiderState]()
+
+  /** An environment that executes jobs one after another. */
   private[this] val _env = new Actor with Env {
     val db = JobExecutor.this.db
 
