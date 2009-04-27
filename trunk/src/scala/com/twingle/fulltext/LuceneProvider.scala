@@ -17,6 +17,14 @@ import org.apache.lucene.search.{HitCollector, IndexSearcher, Query}
 import com.twingle.Log.log
 import com.twingle.persist.DatabaseObject
 
+/**
+ * Provides full text search services for Twingle {@link DatabaseObject} records using the Lucene
+ * search engine.
+ *
+ * @param indexPath full path to the directory under which the Lucene search index data is
+ *                  to be stored.  An initially empty index will be created if one does not
+ *                  already exist.
+ */
 class LuceneProvider (val indexPath :String) extends FullTextService
 {
   // from FullTextService
