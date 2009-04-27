@@ -18,7 +18,7 @@ object Twingled
     val exec = new JobExecutor(db)
     exec.start()
 
-    val http = new HttpServer(8080)
+    val http = new HttpServer(exec.env, 8080)
     http.start()
 
     log.info("Twingle daemon running.")

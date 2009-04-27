@@ -9,7 +9,7 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 /**
  * Simple hello world servlet.
  */
-class HelloServlet extends HttpServlet
+class HelloServlet (env :Env) extends HttpServlet
 {
   override protected def doGet (req :HttpServletRequest, rsp :HttpServletResponse) {
     val out = new PrintStream(rsp.getOutputStream())
