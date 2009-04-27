@@ -3,6 +3,7 @@
 
 package com.twingle.spider
 
+import com.twingle.daemon.Job
 import com.twingle.persist.DatabaseObject
 
 abstract class Spider
@@ -19,6 +20,9 @@ object Spider
 
     /** The frequency (in seconds) at which we run this spider. */
     def runEvery () :Int = reqA(intM, "runEvery").data
+
+    /** Creates a job that runs this spider. */
+    def createJob () :Job
   }
 
   abstract class ConfigBuilder extends DatabaseObject.Builder {

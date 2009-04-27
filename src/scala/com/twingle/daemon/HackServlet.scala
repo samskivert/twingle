@@ -12,12 +12,12 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 class HackServlet (env :Env) extends HttpServlet
 {
   override protected def doGet (req :HttpServletRequest, rsp :HttpServletResponse) {
-    val query = req.getPathInfo.substring(1)
+    val query = req.getPathInfo
     val out = new PrintStream(rsp.getOutputStream())
     if (query != null && query.length > 0) {
       out.println("Query: '" + query + "'")
       out.println("Results:")
-      env.db.find(query).foreach(obj => out.println(obj))
+      env.db.find(query.substring(1)).foreach(obj => out.println(obj))
     } else {
       out.println("Hack! Tack a query onto the path.")
     }
