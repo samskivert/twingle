@@ -9,6 +9,8 @@ import org.mortbay.jetty.handler.{HandlerCollection, ContextHandlerCollection}
 import org.mortbay.jetty.nio.SelectChannelConnector
 import org.mortbay.jetty.servlet.{Context, ServletHolder}
 
+import com.twingle.Log.log
+
 /**
  * Handles the serving of HTTP requests in the Twingle daemon.
  */
@@ -32,6 +34,6 @@ class HttpServer (env :Env, port :Int)
     _server.setHandler(handlers)
 
     // wire up our various servlets
-    context.addServlet(new ServletHolder(new HelloServlet(env)), "/hello")
+    context.addServlet(new ServletHolder(new HackServlet(env)), "/hack/*")
   }
 }
