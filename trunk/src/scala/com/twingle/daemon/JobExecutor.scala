@@ -14,7 +14,7 @@ import com.twingle.persist.Database
  */
 class JobExecutor (db :Database)
 {
-  val env :Env = _env
+  def env () :Env = _env
 
   def start () {
     // start our environment and pass it a scheduler to get things started
