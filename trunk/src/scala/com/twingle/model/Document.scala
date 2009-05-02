@@ -64,8 +64,8 @@ package tests {
         lastModified(now).
         build
 
-      expect("http://www.samskivert.com/") { doc.location }
-      expect("MDB's Blog") { doc.name }
+      expect(Some("http://www.samskivert.com/")) { doc.location }
+      expect(Some("MDB's Blog")) { doc.name }
       expect(Some("Foo bar baz!")) { doc.text }
       expect(None) { doc.bits }
       expect(Some(now)) { doc.created }
