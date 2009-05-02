@@ -62,8 +62,8 @@ package tests {
         recipients(List(shaper.id)).
         build
 
-      expect("twitter://1231232") { tweet.location }
-      expect("Tweet tweet") { tweet.name }
+      expect(Some("twitter://1231232")) { tweet.location }
+      expect(Some("Tweet tweet")) { tweet.name }
       expect(mdb.id) { tweet.author }
       expect(List(shaper.id)) { tweet.recipients }
 
