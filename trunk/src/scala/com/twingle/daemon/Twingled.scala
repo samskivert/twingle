@@ -24,7 +24,7 @@ object Twingled
     // register a hook to shutdown our database when the daemon exits
     Runtime.getRuntime.addShutdownHook(new Thread() {
       override def run () {
-        println("Shutting down...")
+        log.info("Twingle daemon shutting down...")
         db.shutdown()
       }
     })
