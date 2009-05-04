@@ -11,7 +11,7 @@ import java.util.Properties
 import com.twingle.Log.log
 import com.twingle.spider.TwitterSpider
 import com.twingle.persist.Database
-import com.twingle.persist.TrivialDatabase
+import com.twingle.persist.DerbyDatabase
 
 /**
  * The main entry point for the Twingle daemon.
@@ -19,7 +19,15 @@ import com.twingle.persist.TrivialDatabase
 object Twingled
 {
   def main (args :Array[String]) {
-    val db = new TrivialDatabase // TODO
+    val db = new DerbyDatabase
+
+    // register a hook to shutdown our database when the daemon exits
+    Runtime.getRuntime.addShutdownHook(new Thread() {
+      override def run () {
+        println("Shutting down...")
+        db.shutdown()
+      }
+    })
 
     // create our job executor and http server
     val exec = new JobExecutor(db)

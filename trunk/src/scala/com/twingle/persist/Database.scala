@@ -31,9 +31,8 @@ trait Database
    */
   def find (id :UUID) :Iterator[DatabaseObject]
 
-//   /**
-//    * Creates a new database object with the supplied data. A UUID will be assigned to the newly
-//    * created object.
-//    */
-//   def make (data :Map[String, String]) :DatabaseObject
+  /**
+   * Instructs the database to shutdown and close any open resources.
+   */
+  def shutdown () :Unit
 }
