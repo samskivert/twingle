@@ -31,6 +31,11 @@ class TrivialDatabase extends AnyRef with Database
     _db.values.filter(obj => matches(obj, id))
   }
 
+  // from Database
+  def shutdown () {
+    // nada
+  }
+
   protected def matches (obj :DatabaseObject, query :String) = {
     val meta = DatabaseObject.meta(obj)
     val tquery = new TrivialDatabase.Query(query)
