@@ -19,13 +19,13 @@ trait DatabaseObject
   import DatabaseObject.Marshaler
 
   /** This object's unique identifier. */
-  def id :UUID = reqA(uuidM, "id").data
+  def id :UUID = reqA(uuidM, 'id).data
 
   /** Returns the names of all attributes contained in this object. */
-  def attrs () :Iterator[String] = _attrs.keys
+  def attrs () :Iterator[Symbol] = _attrs.keys
 
   /** Returns true if this object contains an attribute with the specified name. */
-  def hasAttr (name :String) :Boolean = _attrs.contains(name)
+  def hasAttr (name :Symbol) :Boolean = _attrs.contains(name)
 
   /** Returns a brief string identifier for this instance. */
   def idString = getClass.getSimpleName + ":" + id
@@ -36,10 +36,10 @@ trait DatabaseObject
   /**
    * Returns the string value of the supplied attr.
    */
-  protected def value (name :String) :Option[String] = _attrs.get(name)
+  protected def value (name :Symbol) :Option[String] = _attrs.get(name)
 
   /** Represents a single attribute of a database object. */
-  protected abstract class Attr[T] (marsh :Marshaler[T], name :String) {
+  protected abstract class Attr[T] (marsh :Marshaler[T], name :Symbol) {
     /** Defines the type used as a container for our attribute, e.g. Option, List, etc. */
     type Container
 
@@ -51,7 +51,7 @@ trait DatabaseObject
   }
 
   /** Represents a required attribute. */
-  protected class ReqAttr[T] (marsh :Marshaler[T], name :String) extends Attr[T](marsh, name) {
+  protected class ReqAttr[T] (marsh :Marshaler[T], name :Symbol) extends Attr[T](marsh, name) {
     /** Required attributes have no container as they always exist. */
     type Container = T
 
@@ -60,10 +60,10 @@ trait DatabaseObject
   }
 
   /** Creates a required attribute. */
-  protected def reqA[T] (marsh :Marshaler[T], name :String) = new ReqAttr[T](marsh, name)
+  protected def reqA[T] (marsh :Marshaler[T], name :Symbol) = new ReqAttr[T](marsh, name)
 
   /** Represents an optional attribute. */
-  protected class OptAttr[T] (marsh :Marshaler[T], name :String) extends Attr[T](marsh, name) {
+  protected class OptAttr[T] (marsh :Marshaler[T], name :Symbol) extends Attr[T](marsh, name) {
     /** Define our container type. In this case an Option. */
     type Container = Option[T]
 
@@ -75,10 +75,10 @@ trait DatabaseObject
   }
 
   /** Creates an optional attribute. */
-  protected def optA[T] (marsh :Marshaler[T], name :String) = new OptAttr[T](marsh, name)
+  protected def optA[T] (marsh :Marshaler[T], name :Symbol) = new OptAttr[T](marsh, name)
 
   /** Represents a list attribute. */
-  protected class ListAttr[T] (marsh :Marshaler[T], name :String) extends Attr[T](marsh, name) {
+  protected class ListAttr[T] (marsh :Marshaler[T], name :Symbol) extends Attr[T](marsh, name) {
     /** List attribute data is wrapped in a List. */
     type Container = List[T]
 
@@ -89,7 +89,7 @@ trait DatabaseObject
   }
 
   /** Creates an attribute for an optional attribute of a database object. */
-  protected def listA[T] (marsh :Marshaler[T], name :String) = new ListAttr[T](marsh, name)
+  protected def listA[T] (marsh :Marshaler[T], name :Symbol) = new ListAttr[T](marsh, name)
 
   // bring our marshalers into scope
   protected def uuidM = DatabaseObject.uuidM
@@ -100,11 +100,11 @@ trait DatabaseObject
   protected def byteBufferM = DatabaseObject.byteBufferM
 
   // I don't like this, need to figure out something better
-  private[persist] def init (attrs :Map[String, String]) {
+  private[persist] def init (attrs :Map[Symbol, String]) {
     _attrs = attrs
   }
 
-  private[this] var _attrs :Map[String, String] = null
+  private[this] var _attrs :Map[Symbol, String] = null
 }
 
 object DatabaseObject
@@ -115,18 +115,18 @@ object DatabaseObject
       while (pnames.hasMoreElements) {
         val name = pnames.nextElement.asInstanceOf[String]
         if (name.startsWith(prefix)) {
-          _map += (name.substring(prefix.length) -> props.getProperty(name))
+          _map += (Symbol(name.substring(prefix.length)) -> props.getProperty(name))
         }
       }
       this
     }
 
-    protected def add[T <: Any] (name :String, value :T) :this.type = {
+    protected def add[T <: Any] (name :Symbol, value :T) :this.type = {
       _map += (name -> marsh(value).marshal(value))
       this
     }
 
-    protected def add[T <: Any] (name :String, value :Option[T]) :this.type = {
+    protected def add[T <: Any] (name :Symbol, value :Option[T]) :this.type = {
       value match {
         case None => // nothing doing
         case Some(v) => add(name, v)
@@ -134,7 +134,7 @@ object DatabaseObject
       this
     }
 
-    protected def add[T <: Any] (name :String, value :List[T]) :this.type = {
+    protected def add[T <: Any] (name :Symbol, value :List[T]) :this.type = {
       if (!value.isEmpty) {
         _map += (name -> value.map(marsh(value.head).marshal).mkString("\t"))
       }
@@ -142,8 +142,8 @@ object DatabaseObject
     }
 
     protected def build[T <: DatabaseObject] (obj :T) = {
-      _map += ("id" -> uuidM.marshal(UUID.randomUUID))
-      _map += ("_type_" -> obj.getClass.getName)
+      _map += ('id -> uuidM.marshal(UUID.randomUUID))
+      _map += ('clazz -> obj.getClass.getName)
       obj.init(_map)
       obj
     }
@@ -151,7 +151,7 @@ object DatabaseObject
     private[this] def marsh[T <: Any] (value :T) =
       _marshalers.get(value.asInstanceOf[AnyRef].getClass).get.asInstanceOf[Marshaler[T]]
 
-    private[this] var _map = Map[String, String]()
+    private[this] var _map = Map[Symbol, String]()
   }
 
   class Metadata[T <: DatabaseObject] (clazz :Class[T]) {
@@ -164,7 +164,7 @@ object DatabaseObject
     /** Returns all attributes of the object that contain Dates. */
     val dateAttrs = clazz.getMethods.filter(m => isType(m, classOf[Date]))
 
-    private[this] def isType (method :Method, target :Class[_]) = method.getGenericReturnType match {
+    private[this] def isType (m :Method, target :Class[_]) = m.getGenericReturnType match {
       case clazz :Class[_] => (clazz == target)
       case ptype :ParameterizedType => (ptype.getActualTypeArguments.length == 1 &&
                                         ptype.getActualTypeArguments.apply(0) == target &&
