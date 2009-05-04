@@ -15,13 +15,13 @@ class Message extends Document
   def subject :Option[String] = name
 
   /** The author of this message. */
-  def author :UUID = reqA(uuidM, "author").data
+  def author :UUID = reqA(uuidM, 'author).data
 
   /** The recipients of this message. */
-  def recipients :List[UUID] = listA(uuidM, "recipients").data
+  def recipients :List[UUID] = listA(uuidM, 'recipients).data
 
   /** The id of the conversation of which this message is a part. */
-  def conversation :Option[UUID] = optA(uuidM, "conversation").data
+  def conversation :Option[UUID] = optA(uuidM, 'conversation).data
 }
 
 /**
@@ -31,9 +31,9 @@ object Message
 {
   def builder = new Document.Builder {
     def subject (subject :String) = name(subject) // subject is an alias for "name"
-    def author (author :UUID) = add("author", author)
-    def recipients (recipients :List[UUID]) = add("recipients", recipients)
-    def conversation (conversation :UUID) = add("conversation", conversation)
+    def author (author :UUID) = add('author, author)
+    def recipients (recipients :List[UUID]) = add('recipients, recipients)
+    def conversation (conversation :UUID) = add('conversation, conversation)
     def build :Message = build(new Message)
   }
 }
