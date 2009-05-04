@@ -85,10 +85,10 @@ object FriendFeedSpider
   /** Details a single user's FriendFeed configuration. */
   class Config extends Spider.Config {
     /** The FriendFeed account's username. */
-    def username () :String = reqA(stringM, "username").data
+    def username () :String = reqA(stringM, 'username).data
 
     /** The FriendFeed account's remote key. */
-    def remoteKey () :Option[String] = optA(stringM, "remoteKey").data
+    def remoteKey () :Option[String] = optA(stringM, 'remoteKey).data
 
     def createJob () = new Job() {
       def run (env :Env) {
@@ -125,8 +125,8 @@ object FriendFeedSpider
                     val userProfile :Profile)
 
   def configBuilder () = new Spider.ConfigBuilder {
-    def username (username :String) = { add("username", username); this }
-    def remoteKey (remoteKey :String) = { add("remoteKey", remoteKey); this }
+    def username (username :String) = { add('username, username); this }
+    def remoteKey (remoteKey :String) = { add('remoteKey, remoteKey); this }
     def build :FriendFeedSpider.Config = build(new FriendFeedSpider.Config)
   }
 }

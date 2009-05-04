@@ -56,10 +56,10 @@ object TwitterSpider
   /** Contains configuration information for the Twitter spider. */
   class Config extends Spider.Config {
     /** The Twitter account's username. */
-    def username () :String = reqA(stringM, "username").data
+    def username () :String = reqA(stringM, 'username).data
 
     /** The Twitter account's password. TODO: can we encyrpt this? */
-    def password () :String = reqA(stringM, "password").data
+    def password () :String = reqA(stringM, 'password).data
 
     def createJob () = new Job() {
       def run (env :Env) {
@@ -80,8 +80,8 @@ object TwitterSpider
                     val text :String)
 
   def configBuilder () = new Spider.ConfigBuilder {
-    def username (username :String) = { add("username", username); this }
-    def password (password :String) = { add("password", password); this }
+    def username (username :String) = { add('username, username); this }
+    def password (password :String) = { add('password, password); this }
     def build :TwitterSpider.Config = build(new TwitterSpider.Config)
   }
 }

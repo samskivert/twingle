@@ -123,7 +123,7 @@ object RSSFeedSpider
   /** Details a single RSS feed configuration. */
   class Config extends Spider.Config {
     /** The main url from which the rss feed xml data is to be fetched. */
-    def url () :String = reqA(stringM, "url").data
+    def url () :String = reqA(stringM, 'url).data
 
     def createJob () = new Job() {
       def run (env :Env) {
@@ -146,7 +146,7 @@ object RSSFeedSpider
                       val content :String)
 
   def configBuilder () = new Spider.ConfigBuilder {
-    def url (url :String) = { add("url", url); this }
+    def url (url :String) = { add('url, url); this }
     def build :RSSFeedSpider.Config = build(new RSSFeedSpider.Config)
   }
 }
