@@ -210,22 +210,22 @@ object MailSpider
 {
   class Config extends Spider.Config {
     /** The email account's username. */
-    def username () :String = reqA(stringM, "username").data
+    def username () :String = reqA(stringM, 'username).data
 
     /** The email account's password. TODO: can we encyrpt this? */
-    def password () :String = reqA(stringM, "password").data
+    def password () :String = reqA(stringM, 'password).data
 
     /** The protocol to use when talking to the mail server (imap or imaps). */
-    def protocol () :String = reqA(stringM, "protocol").data
+    def protocol () :String = reqA(stringM, 'protocol).data
 
     /** The host at which to contact the mail server. */
-    def host () :String = reqA(stringM, "host").data
+    def host () :String = reqA(stringM, 'host).data
 
     /** The port on which to contact the mail server. */
-    def port () :Int = reqA(intM, "port").data
+    def port () :Int = reqA(intM, 'port).data
 
     /** Whether or not to enable debug mode. */
-    def debug () :Boolean = reqA(booleanM, "debug").data
+    def debug () :Boolean = reqA(booleanM, 'debug).data
 
     def createJob () = new Job() {
       def run (env :Env) {
@@ -246,12 +246,12 @@ object MailSpider
                           val contents :Object)
 
   def configBuilder () = new Spider.ConfigBuilder {
-    def username (username :String) = { add("username", username); this }
-    def password (password :String) = { add("password", password); this }
-    def protocol (protocol :String) = { add("protocol", protocol); this }
-    def host (host :String) = { add("host", host); this }
-    def port (port :Int) = { add("port", port); this }
-    def debug (debug :Boolean) = { add("debug", debug); this }
+    def username (username :String) = { add('username, username); this }
+    def password (password :String) = { add('password, password); this }
+    def protocol (protocol :String) = { add('protocol, protocol); this }
+    def host (host :String) = { add('host, host); this }
+    def port (port :Int) = { add('port, port); this }
+    def debug (debug :Boolean) = { add('debug, debug); this }
     def build :MailSpider.Config = build(new MailSpider.Config)
   }
 }

@@ -12,10 +12,10 @@ import com.twingle.persist.DatabaseObject
 abstract class SpiderConfig extends DatabaseObject
 {
   /** Whether or not this spider is enabled. */
-  def enabled () :Boolean = reqA(booleanM, "enabled").data
+  def enabled () :Boolean = reqA(booleanM, 'enabled).data
 
   /** The frequency (in seconds) at which we run this spider. */
-  def runEvery () :Int = reqA(intM, "runEvery").data
+  def runEvery () :Int = reqA(intM, 'runEvery).data
 
   /** Creates a job that executes this configuration. */
   def createJob () :Job
@@ -27,7 +27,7 @@ abstract class SpiderConfig extends DatabaseObject
 object SpiderConfig
 {
   abstract class Builder extends DatabaseObject.Builder {
-    def enabled (enabled :Boolean) :this.type = { add("enabled", enabled); this }
-    def runEvery (runEvery :Int) :this.type = { add("runEvery", runEvery); this }
+    def enabled (enabled :Boolean) :this.type = { add('enabled, enabled); this }
+    def runEvery (runEvery :Int) :this.type = { add('runEvery, runEvery); this }
   }
 }
