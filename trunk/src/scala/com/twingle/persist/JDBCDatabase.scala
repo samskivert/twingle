@@ -9,6 +9,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.util.UUID
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Provides a database implementation backed by a SQL database accessed via JDBC.
  */
@@ -66,10 +68,8 @@ abstract class JDBCDatabase extends AnyRef with Database
     }
   }
 
-  protected def getTableNames () = {
-    queryFold(_.getMetaData().getTables(null, null, null, null), Nil,
-              (rs, list :List[String]) => rs.getString("TABLE_NAME").toLowerCase :: list)
-  }
+  protected def getTableNames () = queryMap(_.getMetaData().getTables(null, null, null, null),
+                                            _.getString("TABLE_NAME").toLowerCase)
 
   /** Creates a statement, executes a block, commits the connection and closes the statement. */
   protected def exec (op :Statement => Unit) {
@@ -92,13 +92,13 @@ abstract class JDBCDatabase extends AnyRef with Database
     }
   }
 
-  /** Executes the supplied query then folds the supplied function over the result set. */
-  protected def queryFold[T] (query :Connection => ResultSet, z :T, f :(ResultSet, T) => T) = {
+  /** Executes the supplied query, maps each row using f and returns a list of the results. */
+  protected def queryMap[T] (query :Connection => ResultSet, f :ResultSet => T) = {
     val rs = query(_conn)
     try {
-      var v = z
-      while (rs.next()) v = f(rs, v)
-      v
+      val lbuf = new ListBuffer[T]
+      while (rs.next()) lbuf += f(rs)
+      lbuf.toList
     } finally {
       rs.close
     }
