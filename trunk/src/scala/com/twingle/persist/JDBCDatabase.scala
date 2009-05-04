@@ -68,8 +68,9 @@ abstract class JDBCDatabase extends AnyRef with Database
     }
   }
 
-  protected def getTableNames () = queryMap(_.getMetaData().getTables(null, null, null, null),
-                                            _.getString("TABLE_NAME").toLowerCase)
+  protected def getTableNames () :List[String] =
+    queryMap(_.getMetaData().getTables(null, null, null, null),
+             _.getString("TABLE_NAME").toLowerCase)
 
   /** Creates a statement, executes a block, commits the connection and closes the statement. */
   protected def exec (op :Statement => Unit) {
@@ -83,7 +84,7 @@ abstract class JDBCDatabase extends AnyRef with Database
   }
 
   /** Executes the supplied query then executes the supplied action on the result set. */
-  protected def query[T] (query :Connection => ResultSet, action :ResultSet => T) = {
+  protected def query[T] (query :Connection => ResultSet, action :ResultSet => T) :T = {
     val rs = query(_conn)
     try {
       action(rs)
@@ -93,7 +94,7 @@ abstract class JDBCDatabase extends AnyRef with Database
   }
 
   /** Executes the supplied query, maps each row using f and returns a list of the results. */
-  protected def queryMap[T] (query :Connection => ResultSet, f :ResultSet => T) = {
+  protected def queryMap[T] (query :Connection => ResultSet, f :ResultSet => T) :List[T] = {
     val rs = query(_conn)
     try {
       val lbuf = new ListBuffer[T]
