@@ -14,22 +14,22 @@ import com.twingle.persist.DatabaseObject
 class Document extends AnyRef with DatabaseObject
 {
   /** The URL defining this document's location. */
-  def location :Option[String] = optA(stringM, "location").data
+  def location :Option[String] = optA(stringM, 'location).data
 
   /** The name of this document. */
-  def name :Option[String] = optA(stringM, "name").data
+  def name :Option[String] = optA(stringM, 'name).data
 
   /** The text of this document. */
-  def text :Option[String] = optA(stringM, "text").data
+  def text :Option[String] = optA(stringM, 'text).data
 
   /** This document's binary data. */
-  def bits :Option[ByteBuffer] = optA(byteBufferM, "bits").data
+  def bits :Option[ByteBuffer] = optA(byteBufferM, 'bits).data
 
   /** The date on which this document was created. */
-  def created :Option[Date] = optA(dateM, "created").data
+  def created :Option[Date] = optA(dateM, 'created).data
 
   /** The date on which this document was last modified. */
-  def lastModified :Option[Date] = optA(dateM, "last_modified").data
+  def lastModified :Option[Date] = optA(dateM, 'lastModified).data
 }
 
 /**
@@ -38,12 +38,12 @@ class Document extends AnyRef with DatabaseObject
 object Document
 {
   class Builder extends DatabaseObject.Builder {
-    def location (location :String) :this.type = add("location", location)
-    def name (name :String) :this.type = add("name", name)
-    def text (text :String) :this.type = add("text", text)
-    def bits (bits :ByteBuffer) :this.type = add("bits", bits)
-    def created (created :Date) :this.type = add("created", created)
-    def lastModified (lastModified :Date) :this.type = add("last_modified", lastModified)
+    def location (location :String) :this.type = add('location, location)
+    def name (name :String) :this.type = add('name, name)
+    def text (text :String) :this.type = add('text, text)
+    def bits (bits :ByteBuffer) :this.type = add('bits, bits)
+    def created (created :Date) :this.type = add('created, created)
+    def lastModified (lastModified :Date) :this.type = add('lastModified, lastModified)
   }
   def builder = new Builder {
     def build :Document = build(new Document)
