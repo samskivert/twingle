@@ -3,7 +3,10 @@
 
 package com.twingle.persist
 
+import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.ResultSet
+import java.sql.Statement
 import java.util.UUID
 
 /**
@@ -53,28 +56,51 @@ abstract class JDBCDatabase extends AnyRef with Database
   protected def createObjectTable () {
     if (!getTableNames.contains(ObjectTable)) {
       println("Creating '" + ObjectTable + "' table...")
-      val stmt = _conn.createStatement
-      try {
+      exec(stmt => {
         stmt.executeUpdate("create table " + ObjectTable + " " +
                            "(uuid varchar(64) not null," +
                            " field varchar(64) not null," +
                            " value clob(128M) not null," +
                            " primary key (uuid, field))")
-        _conn.commit()
-      } finally {
-        stmt.close
-      }
+      })
     }
   }
 
   protected def getTableNames () = {
-    val gtrs = _conn.getMetaData().getTables(null, null, ObjectTable, null)
+    queryFold(_.getMetaData().getTables(null, null, null, null), Nil,
+              (rs, list :List[String]) => rs.getString("TABLE_NAME").toLowerCase :: list)
+  }
+
+  /** Creates a statement, executes a block, commits the connection and closes the statement. */
+  protected def exec (op :Statement => Unit) {
+    val stmt = _conn.createStatement
     try {
-      def foldNames () :List[String] =
-        if (gtrs.next()) gtrs.getString("TABLE_NAME") :: foldNames() else Nil
-      foldNames()
+      op(stmt)
+      _conn.commit()
     } finally {
-      gtrs.close()
+      stmt.close
+    }
+  }
+
+  /** Executes the supplied query then executes the supplied action on the result set. */
+  protected def query[T] (query :Connection => ResultSet, action :ResultSet => T) = {
+    val rs = query(_conn)
+    try {
+      action(rs)
+    } finally {
+      rs.close
+    }
+  }
+
+  /** Executes the supplied query then folds the supplied function over the result set. */
+  protected def queryFold[T] (query :Connection => ResultSet, z :T, f :(ResultSet, T) => T) = {
+    val rs = query(_conn)
+    try {
+      var v = z
+      while (rs.next()) v = f(rs, v)
+      v
+    } finally {
+      rs.close
     }
   }
 
