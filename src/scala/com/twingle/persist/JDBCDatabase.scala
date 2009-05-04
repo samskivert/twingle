@@ -57,7 +57,6 @@ abstract class JDBCDatabase extends AnyRef with Database
 
   protected def createObjectTable () {
     if (!getTableNames.contains(ObjectTable)) {
-      println("Creating '" + ObjectTable + "' table...")
       exec(stmt => {
         stmt.executeUpdate("create table " + ObjectTable + " " +
                            "(uuid varchar(64) not null," +
@@ -74,34 +73,49 @@ abstract class JDBCDatabase extends AnyRef with Database
 
   /** Creates a statement, executes a block, commits the connection and closes the statement. */
   protected def exec (op :Statement => Unit) {
-    val stmt = _conn.createStatement
-    try {
-      op(stmt)
-      _conn.commit()
-    } finally {
-      stmt.close
-    }
+    transact(conn => {
+      val stmt = conn.createStatement
+      try {
+        op(stmt)
+      } finally {
+        stmt.close
+      }
+    })
   }
 
   /** Executes the supplied query then executes the supplied action on the result set. */
-  protected def query[T] (query :Connection => ResultSet, action :ResultSet => T) :T = {
-    val rs = query(_conn)
-    try {
-      action(rs)
-    } finally {
-      rs.close
-    }
+  protected def query[T] (q :Connection => ResultSet, action :ResultSet => T) :T = {
+    transact(conn => {
+      val rs = q(conn)
+      try {
+        action(rs)
+      } finally {
+        rs.close
+      }
+    })
   }
 
   /** Executes the supplied query, maps each row using f and returns a list of the results. */
-  protected def queryMap[T] (query :Connection => ResultSet, f :ResultSet => T) :List[T] = {
-    val rs = query(_conn)
-    try {
+  protected def queryMap[T] (q :Connection => ResultSet, f :ResultSet => T) :List[T] = {
+    query(q, rs => {
       val lbuf = new ListBuffer[T]
       while (rs.next()) lbuf += f(rs)
       lbuf.toList
-    } finally {
-      rs.close
+    })
+  }
+
+  /** Executes the supplied block in a transction.
+   *  Commits if the block completes, rolls back if an exception is thrown. */
+  protected def transact[T] (op :Connection => T) :T = {
+    try {
+      val result = op(_conn)
+      _conn.commit()
+      result
+    } catch {
+      case ex :Exception => {
+        _conn.rollback()
+        throw ex
+      }
     }
   }
 
