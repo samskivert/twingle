@@ -5,6 +5,7 @@ package com.twingle.persist
 
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 import java.util.UUID
@@ -31,12 +32,31 @@ abstract class JDBCDatabase extends AnyRef with Database
 
   // from Database
   def load[C <: DatabaseObject] (oclass :Class[C], id :UUID) :Option[C] = {
-    None // TODO
+    query("select field, value from " + ObjectTable + " where uuid = ?",
+          stmt => { stmt.setString(1, id.toString) },
+          rs => (Symbol(rs.getString(1)) -> rs.getString(2))) match {
+      case Nil => None
+      case attrs => {
+        val obj = oclass.newInstance.asInstanceOf[C]
+        obj.init(Map() ++ attrs + ('id -> id.toString))
+        Some(obj)
+      }
+    }
   }
 
   // from Database
   def store (obj :DatabaseObject) {
-    // TODO
+    // TODO: make this all happen in the same transaction
+    exec("delete from " + ObjectTable + " where uuid = ?",
+         stmt => { stmt.setString(1, obj.id.toString) })
+    for ((key, value) <- obj.attrs) {
+      exec("insert into " + ObjectTable + " (uuid, field, value) values(?, ?, ?)",
+           stmt => {
+             stmt.setString(1, obj.id.toString)
+             stmt.setString(2, key.name)
+             stmt.setString(3, value)
+           });
+    }
   }
 
   // from Database
@@ -57,55 +77,73 @@ abstract class JDBCDatabase extends AnyRef with Database
 
   protected def createObjectTable () {
     if (!getTableNames.contains(ObjectTable)) {
-      exec(stmt => {
-        stmt.executeUpdate("create table " + ObjectTable + " " +
-                           "(uuid varchar(64) not null," +
-                           " field varchar(64) not null," +
-                           " value clob(128M) not null," +
-                           " primary key (uuid, field))")
-      })
+      exec("create table " + ObjectTable + " " +
+           "(uuid varchar(64) not null," +
+           " field varchar(64) not null," +
+           " value clob(128M) not null," +
+           " primary key (uuid, field))")
     }
   }
 
   protected def getTableNames () :List[String] =
-    queryMap(_.getMetaData().getTables(null, null, null, null),
-             _.getString("TABLE_NAME").toLowerCase)
+    query(_.getMetaData().getTables(null, null, null, null), _.getString("TABLE_NAME").toLowerCase)
 
-  /** Creates a statement, executes a block, commits the connection and closes the statement. */
-  protected def exec (op :Statement => Unit) {
+  protected def exec (stmt :String) :Int = {
     transact(conn => {
-      val stmt = conn.createStatement
+      val sstmt = conn.createStatement
       try {
-        op(stmt)
+        sstmt.executeUpdate(stmt)
       } finally {
-        stmt.close
+        sstmt.close
       }
     })
   }
 
-  /** Executes the supplied query then executes the supplied action on the result set. */
-  protected def query[T] (q :Connection => ResultSet, action :ResultSet => T) :T = {
+  protected def exec (stmt :String, bind :PreparedStatement => Unit) :Int = {
     transact(conn => {
-      val rs = q(conn)
+      val pstmt = conn.prepareStatement(stmt)
       try {
-        action(rs)
+        bind(pstmt)
+        pstmt.executeUpdate
+      } finally {
+        pstmt.close
+      }
+    })
+  }
+
+  protected def query[T] (query :Connection => ResultSet, f :ResultSet => T) :List[T] = {
+    transact(conn => {
+      val rs = query(conn)
+      try {
+        val lbuf = new ListBuffer[T]
+        while (rs.next()) lbuf += f(rs)
+        lbuf.toList
       } finally {
         rs.close
       }
     })
   }
 
-  /** Executes the supplied query, maps each row using f and returns a list of the results. */
-  protected def queryMap[T] (q :Connection => ResultSet, f :ResultSet => T) :List[T] = {
-    query(q, rs => {
-      val lbuf = new ListBuffer[T]
-      while (rs.next()) lbuf += f(rs)
-      lbuf.toList
+  protected def query[T] (query :String, bind :PreparedStatement => Unit,
+                          f :ResultSet => T) :List[T] = {
+    transact(conn => {
+      val stmt = conn.prepareStatement(query)
+      try {
+        bind(stmt)
+        val rs = stmt.executeQuery
+        try {
+          val lbuf = new ListBuffer[T]
+          while (rs.next()) lbuf += f(rs)
+          lbuf.toList
+        } finally {
+          rs.close
+        }
+      } finally {
+        stmt.close
+      }
     })
   }
 
-  /** Executes the supplied block in a transction.
-   *  Commits if the block completes, rolls back if an exception is thrown. */
   protected def transact[T] (op :Connection => T) :T = {
     try {
       val result = op(_conn)

@@ -21,11 +21,8 @@ trait DatabaseObject
   /** This object's unique identifier. */
   def id :UUID = reqA(uuidM, 'id).data
 
-  /** Returns the names of all attributes contained in this object. */
-  def attrs () :Iterator[Symbol] = _attrs.keys
-
-  /** Returns true if this object contains an attribute with the specified name. */
-  def hasAttr (name :Symbol) :Boolean = _attrs.contains(name)
+//   /** Returns true if this object contains an attribute with the specified name. */
+//   def hasAttr (name :Symbol) :Boolean = _attrs.contains(name)
 
   /** Returns a brief string identifier for this instance. */
   def idString = getClass.getSimpleName + ":" + id
@@ -99,8 +96,13 @@ trait DatabaseObject
   protected def dateM = DatabaseObject.dateM
   protected def byteBufferM = DatabaseObject.byteBufferM
 
-  // I don't like this, need to figure out something better
+  // these are needed by database implementations to load and store objects
+  private[persist] def attrs () = _attrs.filterKeys('id.!=)
   private[persist] def init (attrs :Map[Symbol, String]) {
+    if (attrs('clazz) != getClass.getName) {
+      throw new IllegalArgumentException("Cannot initialize instance of " + getClass.getName +
+                                         " with attributes of " + attrs('clazz) + ".")
+    }
     _attrs = attrs
   }
 
