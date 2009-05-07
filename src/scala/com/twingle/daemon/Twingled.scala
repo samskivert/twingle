@@ -4,7 +4,7 @@
 package com.twingle.daemon
 
 import java.io.FileNotFoundException
-import java.io.FileReader
+import java.io.FileInputStream
 import java.util.Date
 import java.util.Properties
 
@@ -36,7 +36,7 @@ object Twingled
     // load up and register our spiders
     val props = new Properties
     try {
-      props.load(new FileReader("twingled.properties"))
+      props.load(new FileInputStream("twingled.properties"))
     } catch {
       case fnf :FileNotFoundException => // no problem
     }
