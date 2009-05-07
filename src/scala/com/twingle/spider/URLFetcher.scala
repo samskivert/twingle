@@ -14,16 +14,7 @@ import org.apache.commons.httpclient.{HttpClient, HttpMethod, HttpMethodBase,
 import org.apache.commons.io.IOUtils
 
 class URLFetcher {
-  /** Simple response record to report on http request results. */ 
-  case class Response (method :HttpMethod, resultCode :Int, body :String) {
-    override def toString () = {
-      val buf :StringBuffer = new StringBuffer
-      buf.append("[method=").append(method)
-      buf.append(", resultCode=").append(resultCode)
-      buf.append(", bodyLen=").append(if (body != null) body.size else 0)
-      buf.append("]").toString
-    }
-}
+  import com.twingle.spider.URLFetcher._
 
   /** Request a url via HTTP GET with http user authentication. */
   def getAuthedUrl (url :String, host :String, username :String,
@@ -71,4 +62,18 @@ class URLFetcher {
   }
   
   private[this] val _client = new HttpClient
+}
+
+object URLFetcher
+{
+  /** Simple response record to report on http request results. */ 
+  case class Response (method :HttpMethod, resultCode :Int, body :String) {
+    override def toString () = {
+      val buf :StringBuffer = new StringBuffer
+      buf.append("[method=").append(method)
+      buf.append(", resultCode=").append(resultCode)
+      buf.append(", bodyLen=").append(if (body != null) body.size else 0)
+      buf.append("]").toString
+    }
+  }
 }
