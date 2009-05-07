@@ -41,8 +41,7 @@ class TwitterClient (val urlFetcher :URLFetcher)
   def getPublicTimeline :Seq[Tweet] = {
     val url = "http://twitter.com/statuses/public_timeline.xml"
     val rsp = urlFetcher.getUrl(url)
-    val doc = XML.loadString(rsp.body)
-    (doc \\ "status").map(Tweet.fromXML(_))
+    parseTweets(rsp)
   }
 
  /**
@@ -68,12 +67,10 @@ class TwitterClient (val urlFetcher :URLFetcher)
     val url = baseUrl + '?' + qpb.build
 
     val rsp = urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username, password)
-
-    val doc = XML.loadString(rsp.body)
-    (doc \\ "status").map(Tweet.fromXML(_))
+    parseTweets(rsp)
   }
 
-  /** Fetch a protected user's tweet timeline.  Requires authentication. */
+  /** Fetch a user's tweet timeline.  Requires authentication. */
   def getUserTimeline (username :String, password :String, sinceId :Option[Int], 
                        maxId :Option[Int], count :Option[Int], 
                        page :Option[Int]) :Seq[Tweet] = 
@@ -94,7 +91,6 @@ class TwitterClient (val urlFetcher :URLFetcher)
     username :Option[String], password :Option[String], screenName :Option[String], 
     userId :Option[Int], sinceId :Option[Int], maxId :Option[Int], count :Option[Int], 
     page :Option[Int]) :Seq[Tweet] = {
-    // build the full url to retrieve the specified user's tweets
     val baseUrl = "http://twitter.com/statuses/user_timeline.xml"
     val qpb = new QueryParamBuilder
     qpb.add("user_id", userId)
@@ -105,26 +101,56 @@ class TwitterClient (val urlFetcher :URLFetcher)
     qpb.add("page", page)
     val url = baseUrl + '?' + qpb.build
 
-    // fetch the content, authenticating only if needed
-    val rsp = if (username.isDefined) {
-                urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username.get, password.get) 
-              } else {
-                urlFetcher.getUrl(url)
-              }
-
-    // build xml doc and parse records
-    val doc = XML.loadString(rsp.body)
-    (doc \\ "status").map(Tweet.fromXML(_))
+    val rsp = getMaybeAuthedUrl(username, password, url)
+    parseTweets(rsp)
   }
 
+  /**
+   * Fetch mentions of a particular user, e.g., recent tweets containing "@username".  
+   * Requires authentication.
+   */
+  def getMentions (username :String, password :String, sinceId :Option[Int], 
+                   maxId :Option[Int], count :Option[Int], 
+                   page :Option[Int]) :Seq[Tweet] = {
+    val baseUrl = "http://twitter.com/statuses/mentions.xml"
+    val qpb = new QueryParamBuilder
+    qpb.add("since_id", sinceId)
+    qpb.add("max_id", maxId)
+    qpb.add("count", count)
+    qpb.add("page", page)
+    val url = baseUrl + '?' + qpb.build
 
-/*
-
-  def getMentions
+    val rsp = urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username, password)
+    parseTweets(rsp)
+  }
 
   // Status methods
 
-  def getShowStatus
+  /** 
+   * Returns details on a specific tweet.  Authentication only
+   * required if the tweeting user's feed is protected.
+   */
+  def getShowStatus (username :Option[String], password :Option[String], 
+                     tweetId :Int) :Tweet = {
+    val url = "http://twitter.com/statuses/show/" + tweetId + ".xml"
+    val rsp = getMaybeAuthedUrl(username, password, url)
+    parseTweets(rsp).first
+  }
+
+  protected[this] def getMaybeAuthedUrl (
+    username :Option[String], password :Option[String], url :String) :URLFetcher.Response =
+      if (username.isDefined) {
+        log.info("getting authed url [url=" + url + "].")
+        urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username.get, password.get) 
+      } else {
+        log.info("getting non-auth url [url=" + url + "].")
+        urlFetcher.getUrl(url)
+      }
+
+  protected[this] def parseTweets (rsp :URLFetcher.Response) :Seq[Tweet] = 
+    (XML.loadString(rsp.body) \\ "status").map(Tweet.fromXML(_))
+
+/*
 
   def updateStatus
 
@@ -321,54 +347,56 @@ package tests {
       }
     }
 
-    def createConfig () = new TestConfig("tests.properties")
-
-    def createClient () :TwitterClient = new TwitterClient(new URLFetcher)
-
     def testPublicTimeline () {
-      val client = createClient
-      val tweets = client.getPublicTimeline
+      val tweets = _client.getPublicTimeline
 
       assert(tweets.length > 10)
       tweets.foreach(validTweet(_))
     }
 
     def testFriendsTimeline () {
-      val config = createConfig
-      val client = createClient
-      val tweets = client.getFriendsTimeline(config.privateUsername, config.privatePassword, 
-                                             None, None, None, None)
+      val tweets = _client.getFriendsTimeline(
+        _config.privateUsername, _config.privatePassword, None, None, None, None)
 
       assert(tweets.length > 0)
       tweets.foreach(validTweet(_))
     }
 
     def testUserTimeline () {
-      val config = createConfig
-      val client = createClient
-      val tweets = client.getUserTimeline(config.privateUsername, config.privatePassword, 
-                                          None, None, None, None)
+      val tweets = _client.getUserTimeline(
+        _config.privateUsername, _config.privatePassword, None, None, None, None)
 
       assert(tweets.length > 0)
       tweets.foreach(validTweet(_))
     }
 
     def testUserTimelineByScreenName () {
-      val config = createConfig
-      val client = createClient
-      val tweets = client.getUserTimelineByScreenName(config.username, None, None, None, None)
+      val tweets = _client.getUserTimelineByScreenName(
+        _config.username, None, None, None, None)
 
       assert(tweets.length > 0)
       tweets.foreach(validTweet(_))
     }
 
     def testUserTimelineById () {
-      val config = createConfig
-      val client = createClient
-      val tweets = client.getUserTimelineById(config.userId, None, None, None, None)
+      val tweets = _client.getUserTimelineById(_config.userId, None, None, None, None)
 
       assert(tweets.length > 0)
       tweets.foreach(validTweet(_))
+    }
+
+    def testMentions () {
+      val tweets = _client.getMentions(
+        _config.privateUsername, _config.privatePassword, None, None, None, None)
+
+      assert(tweets.length > 0)
+      tweets.foreach(validTweet(_))
+    }
+
+    def testShowStatus () {
+      val tweet = _client.getShowStatus(None, None, 123)
+
+      validTweet(tweet)
     }
 
     protected[this] def validTweet (t :Tweet) {
@@ -390,5 +418,8 @@ package tests {
 
     protected[this] val DEFAULT_PROFILE_IMAGE_URL = 
       "http://static.twitter.com/images/default_profile_normal.png"
+
+    protected[this] val _config = new TestConfig("tests.properties")
+    protected[this] val _client = new TwitterClient(new URLFetcher)
   }
 }
