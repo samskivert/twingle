@@ -1,0 +1,12 @@
+# Configuration settings required to run the Twingle test suite.
+#
+
+# a twitter username whose feed is public
+twitter.username = # dhh
+# a twitter user id whose feed is public
+twitter.user_id = # 14561327
+
+# a twitter username whose feed is private
+twitter.private_username = # monkey
+# the password to the private twitter user's feed
+twitter.private_password = # banana
