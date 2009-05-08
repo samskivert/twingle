@@ -9,6 +9,8 @@ import scala.xml.{Node, NodeSeq, XML}
 import com.twingle.Log.log
 
 /**
+ * Aims to provide a thorough Scala-oriented client interface to the Twitter API.
+ *
  * http://apiwiki.twitter.com/Twitter-API-Documentation
  *
  * TODO:
@@ -21,32 +23,22 @@ class TwitterClient (val urlFetcher :URLFetcher)
 
   // Search methods
 
-/*
-  def search // json, atom
-
-  def getTrends // json
-
-  def getCurrentTrends // json
-
-  def getDailyTrends // json
-
-  def getWeeklyTrends // json
- */
+//   def search // json, atom
+//   def getTrends // json
+//   def getCurrentTrends // json
+//   def getDailyTrends // json
+//   def getWeeklyTrends // json
 
   // Timeline methods
 
   /**
    * Fetch the most recent {@link Tweet} records from the public Twitter timeline.
    */
-  def getPublicTimeline :Seq[Tweet] = {
-    val url = "http://twitter.com/statuses/public_timeline.xml"
-    val rsp = urlFetcher.getUrl(url)
-    parseTweets(rsp)
-  }
+  def getPublicTimeline :Seq[Tweet] = 
+    parseTweets(urlFetcher.getUrl(twitterUrl("public_timeline.xml")))
 
  /**
-  * Fetch {@link Tweet} records made by a specific user's friends.
-  * Requires authentication as the user.
+  * Fetch tweets made by a specific user's friends. Requires authentication as the user.
   *
   * @param username the user's Twitter username.
   * @param password the user's Twitter password.
@@ -56,42 +48,87 @@ class TwitterClient (val urlFetcher :URLFetcher)
   * @param page optional page of results to retrieve. 
   */
   def getFriendsTimeline (username :String, password :String, 
-                          sinceId :Option[Int], maxId :Option[Int], count :Option[Int], 
-                          page :Option[Int]) :Seq[Tweet] = {
-    val baseUrl = "http://twitter.com/statuses/friends_timeline.xml"
+                          sinceId :Option[Int],
+                          maxId   :Option[Int],
+                          count   :Option[Int], 
+                          page    :Option[Int]) :Seq[Tweet] = {
     val qpb = new QueryParamBuilder
     qpb.add("since_id", sinceId)
     qpb.add("max_id", maxId)
     qpb.add("count", count)
     qpb.add("page", page)
-    val url = baseUrl + '?' + qpb.build
+    val url = twitterUrl("friends_timeline.xml") + '?' + qpb.build
 
-    val rsp = urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username, password)
-    parseTweets(rsp)
+    parseTweets(urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username, password))
   }
 
-  /** Fetch a user's tweet timeline.  Requires authentication. */
-  def getUserTimeline (username :String, password :String, sinceId :Option[Int], 
-                       maxId :Option[Int], count :Option[Int], 
-                       page :Option[Int]) :Seq[Tweet] = 
+  /** 
+   * Fetch the tweet timeline for a user whose tweets are protected.
+   *
+   * @param username the user's Twitter username.
+   * @param password the user's Twitter password.
+   * @param sinceId optional tweet id after which (more-recent-than) tweets are sought.
+   * @param maxId optional tweet id before which (older-than) tweets are sought.
+   * @param count optional number of tweets to retrieve, maximum 200.
+   * @param page optional page of results to retrieve. 
+   */
+  def getUserTimeline (username :String, password :String, 
+                       sinceId :Option[Int], 
+                       maxId   :Option[Int],
+                       count   :Option[Int], 
+                       page    :Option[Int]) :Seq[Tweet] = 
     muxUserTimeline(Some(username), Some(password), None, None, sinceId, maxId, count, page)
 
-  /** Fetch a public user's tweet timeline by screen name. */
-  def getUserTimelineByScreenName (screenName :String, sinceId :Option[Int], 
-                                   maxId :Option[Int], count :Option[Int], 
-                                   page :Option[Int]) :Seq[Tweet] =
+  /** 
+   * Fetch a public user's tweet timeline, wherein the user is specified by their screen
+   * name.
+   *
+   * @param screenName the user's Twitter username.
+   * @param sinceId optional tweet id after which (more-recent-than) tweets are sought.
+   * @param maxId optional tweet id before which (older-than) tweets are sought.
+   * @param count optional number of tweets to retrieve, maximum 200.
+   * @param page optional page of results to retrieve. 
+   */
+  def getUserTimelineByScreenName (screenName :String, 
+                                   sinceId :Option[Int], 
+                                   maxId   :Option[Int], 
+                                   count   :Option[Int], 
+                                   page    :Option[Int]) :Seq[Tweet] =
     muxUserTimeline(None, None, Some(screenName), None, sinceId, maxId, count, page)
 
+  /** 
+   * Fetch a public user's tweet timeline, wherein the user is specified by their Twitter
+   * unique user id.
+   *
+   * @param userId the user's Twitter unique user id.
+   * @param sinceId optional tweet id after which (more-recent-than) tweets are sought.
+   * @param maxId optional tweet id before which (older-than) tweets are sought.
+   * @param count optional number of tweets to retrieve, maximum 200.
+   * @param page optional page of results to retrieve. 
+   */
   /** Fetch a public user's tweet timeline by user id. */
-  def getUserTimelineById (userId :Int, sinceId :Option[Int], maxId :Option[Int], 
-                           count :Option[Int], page :Option[Int]) :Seq[Tweet] = 
+  def getUserTimelineById (userId :Int,
+                           sinceId :Option[Int],
+                           maxId   :Option[Int], 
+                           count   :Option[Int],
+                           page    :Option[Int]) :Seq[Tweet] = 
     muxUserTimeline(None, None, None, Some(userId), sinceId, maxId, count, page)
 
-  protected[this] def muxUserTimeline (
-    username :Option[String], password :Option[String], screenName :Option[String], 
-    userId :Option[Int], sinceId :Option[Int], maxId :Option[Int], count :Option[Int], 
-    page :Option[Int]) :Seq[Tweet] = {
-    val baseUrl = "http://twitter.com/statuses/user_timeline.xml"
+  /**
+   * Internal routine to pull a user's tweet timeline using one of various available means
+   * to specify the user: one of username/password, screen name, or Twitter unique user
+   * id.  For sanity's sake we expose this functionality through more clearly named
+   * specifier-specific methods, all of which route back to here to actually retrieve from
+   * Twitter.
+   */
+  protected def muxUserTimeline (username   :Option[String], 
+                                 password   :Option[String], 
+                                 screenName :Option[String], 
+                                 userId     :Option[Int],
+                                 sinceId    :Option[Int],
+                                 maxId      :Option[Int],
+                                 count      :Option[Int], 
+                                 page       :Option[Int]) :Seq[Tweet] = {
     val qpb = new QueryParamBuilder
     qpb.add("user_id", userId)
     qpb.add("screen_name", screenName)
@@ -99,139 +136,120 @@ class TwitterClient (val urlFetcher :URLFetcher)
     qpb.add("max_id", maxId)
     qpb.add("count", count)
     qpb.add("page", page)
-    val url = baseUrl + '?' + qpb.build
+    val url = twitterUrl("user_timeline.xml") + '?' + qpb.build
 
-    val rsp = getMaybeAuthedUrl(username, password, url)
-    parseTweets(rsp)
+    parseTweets(getMaybeAuthedUrl(username, password, url))
   }
 
   /**
    * Fetch mentions of a particular user, e.g., recent tweets containing "@username".  
    * Requires authentication.
    */
-  def getMentions (username :String, password :String, sinceId :Option[Int], 
-                   maxId :Option[Int], count :Option[Int], 
-                   page :Option[Int]) :Seq[Tweet] = {
-    val baseUrl = "http://twitter.com/statuses/mentions.xml"
+  def getMentions (username :String, password :String, 
+                   sinceId :Option[Int], 
+                   maxId   :Option[Int], 
+                   count   :Option[Int], 
+                   page    :Option[Int]) :Seq[Tweet] = {
     val qpb = new QueryParamBuilder
     qpb.add("since_id", sinceId)
     qpb.add("max_id", maxId)
     qpb.add("count", count)
     qpb.add("page", page)
-    val url = baseUrl + '?' + qpb.build
+    val url = twitterUrl("mentions.xml") + '?' + qpb.build
 
-    val rsp = urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username, password)
-    parseTweets(rsp)
+    parseTweets(urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username, password))
   }
 
   // Status methods
 
   /** 
-   * Returns details on a specific tweet.  Authentication only
-   * required if the tweeting user's feed is protected.
+   * Returns details on a specific tweet.  Authentication only required if the tweeting
+   * user's feed is protected.
    */
   def getShowStatus (username :Option[String], password :Option[String], 
                      tweetId :Int) :Tweet = {
-    val url = "http://twitter.com/statuses/show/" + tweetId + ".xml"
-    val rsp = getMaybeAuthedUrl(username, password, url)
-    parseTweets(rsp).first
+    val url = twitterUrl("show/" + tweetId + ".xml")
+    parseTweets(getMaybeAuthedUrl(username, password, url)).first
   }
 
-  protected[this] def getMaybeAuthedUrl (
-    username :Option[String], password :Option[String], url :String) :URLFetcher.Response =
-      if (username.isDefined) {
-        log.info("getting authed url [url=" + url + "].")
-        urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username.get, password.get) 
-      } else {
-        log.info("getting non-auth url [url=" + url + "].")
-        urlFetcher.getUrl(url)
-      }
-
-  protected[this] def parseTweets (rsp :URLFetcher.Response) :Seq[Tweet] = 
-    (XML.loadString(rsp.body) \\ "status").map(Tweet.fromXML(_))
-
-/*
-
-  def updateStatus
-
-  def destroyStatus
+//   def updateStatus
+//   def destroyStatus
 
   // User methods
 
-  def getUser
-
-  def getFriends
-
-  def getFollowers
+//   def getUser 
+//   def getFriends
+//   def getFollowers
 
   // Direct Message methods
 
-  def getDirectMessages
-
-  def getSentDirectMessages
-
-  def newDirectMessage
-
-  def destroyDirectMessage
+//   def getDirectMessages
+//   def getSentDirectMessages
+//   def newDirectMessage
+//   def destroyDirectMessage
 
   // Friendship methods
 
-  def createFriendship
-
-  def destroyFriendship
-
-  def friendshipExists
+//   def createFriendship
+//   def destroyFriendship
+//   def friendshipExists
 
   // Social Graph methods
 
-  def getFriendIds
-
-  def getFollowerIds
+//   def getFriendIds
+//   def getFollowerIds
 
   // Account methods
 
-  def verifyCredentials
-
-  def getRateLimitStatus
-
-  def getRateLimitStatus
-
-  def endSession
-
-  def updateDeliveryDevice
-
-  def updateProfileColors
-
-  def updateProfileImage
-
-  def updateProfileBackgroundImage
-
-  def updateProfile
+//   def verifyCredentials
+//   def getRateLimitStatus
+//   def getRateLimitStatus
+//   def endSession
+//   def updateDeliveryDevice
+//   def updateProfileColors
+//   def updateProfileImage
+//   def updateProfileBackgroundImage
+//   def updateProfile
 
   // Favorite methods
 
-  def getFavorites
-
-  def createFavorite
-
-  def destroyFavorite
+//   def getFavorites
+//   def createFavorite
+//   def destroyFavorite
 
   // Notification methods
 
-  def followUserNotification
-
-  def leaveUserNotification
+//   def followUserNotification
+//   def leaveUserNotification
 
   // Block methods
 
-  def createBlock
+//   def createBlock
+//   def destroyBlock
 
-  def destroyBlock
+  /** Returns the full url to the specified Twitter API service. */
+  protected def twitterUrl (service :String) = "http://twitter.com/statuses/" + service
 
-  // Help methods
+  /** 
+   * Submits an HTTP GET request for the supplied Twitter URL, optionally using 
+   * standard HTTP authentication for the supplied user which is necessary to retrieve
+   * some data, e.g. private user feeds or a specific user's friend's tweets.
+   */
+  protected def getMaybeAuthedUrl (
+    username :Option[String], password :Option[String], url :String) :URLFetcher.Response =
+      if (username.isDefined) {
+        urlFetcher.getAuthedUrl(url, TWITTER_DOMAIN, username.get, password.get) 
 
-  def test
-*/
+      } else {
+        urlFetcher.getUrl(url)
+      }
+
+  /**
+   * Standard antics to take the response from a Twitter API service call as XML content
+   * and parse it into a sequence of {@link Tweet} records.
+   */
+  protected def parseTweets (rsp :URLFetcher.Response) :Seq[Tweet] = 
+    (XML.loadString(rsp.body) \\ "status").map(Tweet.fromXML(_))
 }
 
 object TwitterClient
@@ -399,7 +417,7 @@ package tests {
       validTweet(tweet)
     }
 
-    protected[this] def validTweet (t :Tweet) {
+    protected def validTweet (t :Tweet) {
       assert(t.id > 0)
       assert(t.createdAt.getTime > 0)
       assert(t.text.length > 0)
@@ -407,7 +425,7 @@ package tests {
       validUser(t.user)
     }
 
-    protected[this] def validUser (u :User) {
+    protected def validUser (u :User) {
       assert(u.id > 0)
       assert(u.name.length > 0)
       assert(u.screenName.length > 0)
