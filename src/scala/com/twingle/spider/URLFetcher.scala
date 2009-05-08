@@ -51,6 +51,9 @@ class URLFetcher {
     // start by resetting the client http state
     _client.getState.clear()
 
+    // make sure to turn off authentication in case it was previously set
+    _client.getParams.setAuthenticationPreemptive(false)
+
     // prepare the method with which we make the request
     val method = new GetMethod(url)
     val resultCode = _client.executeMethod(method)
@@ -67,13 +70,5 @@ class URLFetcher {
 object URLFetcher
 {
   /** Simple response record to report on http request results. */ 
-  case class Response (method :HttpMethod, resultCode :Int, body :String) {
-    override def toString () = {
-      val buf :StringBuffer = new StringBuffer
-      buf.append("[method=").append(method)
-      buf.append(", resultCode=").append(resultCode)
-      buf.append(", bodyLen=").append(if (body != null) body.size else 0)
-      buf.append("]").toString
-    }
-  }
+  case class Response (method :HttpMethod, resultCode :Int, body :String)
 }
