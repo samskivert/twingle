@@ -1,0 +1,38 @@
+You are here: [Twingle](http://code.google.com/p/twingle/) - Overview
+
+## Overview ##
+
+Twingle is a collection of interacting components.
+
+  * Twingle is a library that JVM-based applications can use to access Your Data.
+  * Twingle is a Query Server that publishes an XML-RPC API for querying and browsing Your Data.
+  * Twingle is an HTTP Server that serves a web-based client for querying and browsing Your Data.
+  * Twingle is a Spider Server that periodically runs Spiders which collect Your Data and incorporate it into the Database, and also publishes an XML-RPC API for external injection of Your Data into Twingle by Firefox Extensions or other Twingle-aware applications.
+
+## Data Sources ##
+
+Twingle wants to know all of Your Data, but time and energy are finite, so its programmers have to prioritize. Twingle aims to obtain data from the following sources:
+
+  * IMAP email
+  * Browser history (via file system scanning to start, Firefox extension later)
+  * Browser bookmarks (")
+  * Twitter feed
+  * Facebook email and friend status feed
+  * Instant Messenger history (via file system scanning to start, ? later)
+  * RSS feeds (blogs that you read)
+  * Delicious bookmarks
+  * SMS messaging (would be awesome, is such a thing possible?)
+
+## Components ##
+
+  * [Ontology](Ontology.md)
+  * [Database](Database.md)
+  * [Metadata API](MetadataAPI.md)
+  * [Data API](DataAPI.md)
+  * [Query Server](QueryServer.md)
+  * [Spider Server](SpiderServer.md)
+  * [HTTP Client](HTTPClient.md)
+
+## Architecture ##
+
+![http://twingle.googlecode.com/svn/wiki/twingarch.png](http://twingle.googlecode.com/svn/wiki/twingarch.png)

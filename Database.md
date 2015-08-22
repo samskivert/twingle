@@ -1,0 +1,131 @@
+You are here: [Twingle](http://code.google.com/p/twingle/) - [Overview](Overview.md) - Database
+
+## Database ##
+
+Twingle has a lot of data to keep track of and it needs a flexible and fast database to accomplish its goals.
+
+## Database Objects ##
+
+The Twingle database is a single collection of database objects. Any database object can have any number of attributes and attributes are automatically indexed.
+
+### Attributes ###
+
+Attributes come in four types:
+
+  * _id_ - every database object has a 128-bit uuid (helpfully magically stored in an attribute named "id" and of type UUID); objects can reference other objects using UUIDs
+  * _text_ - UTF-8 text that is full-text indexed
+  * _blob_ - non-indexed unstructured bytes that are just kept around and made available for retrieval when needed
+  * _time_ - a timestamp (milliseconds since the epoch) // paulp says: my sources tell me joda time is the way
+
+Attributes can be required single-value, optional single-value, or optional lists.  (Required list?) Attributes are properly typed, so they will always return T, Option[T](T.md), or List[T](T.md).
+
+TODO: is the list ordered? A: If there are use cases for both ordered and unordered list, it'd be easy enough to add an OrderedList[T](T.md) with extra requirements for insertion/deletion etc.  I'd wait for it to come up.
+
+### Queries ###
+
+Queries are done using a small number of operations. The following is not a syntax for a specialized query language. What sort of anti-social maniac would foist something like that on the world? Twingle is civilized and uses a query API that does not exclude the compiler from the development process. The following is just explanatory documentation:
+
+  * `attribute = value` - returns all objects for which `attribute` contains a value that is equal to the specified value
+  * `attribute in (value, value, ...)` - returns all objects for which `attribute` contains any value that is equal to any of the values in the supplied list (clever monkeys will observe that this is just syntactic sugar for using the first query operation in conjuction with a bunch of `or` operations; Twingle likes sugar)
+  * `attribute matches query` - returns all objects for which `attribute` is a text attribute and matches the supplied full text query; Twingle doesn't yet know what technology it is going to use for full text indexing and thus doesn't know how sophisticated `query` can be
+  * `expr and expr` - returns all objects for which both query expressions match
+  * `expr or expr` - returns all objects for which one or the other query expressions match
+
+### Inserts and Updates ###
+
+Inserts and updates are straightforward. It is possible to insert a new object into the database and be informed of said objects newly assigned id. It is also possible to update any attribute (or set of attributes) for an object, and the id attribute is always used to identify the object to be updated.
+
+### Technical Notes ###
+
+The database is responsible for thread safety and locking. Twingle will have many threads accessing the database in parallel (doing inserts and lookups), and the database will handle locking as efficiently as it can.  @p: Actors.
+
+### Database API ###
+
+The Database provides a Scala object model that allows for simple lookups and insertions as well as more complex queries.  (paulp: here's a little trait hierarchy I just cooked up, as much to demo type parameters and abstract type members as anything else.  It does seem to do what it advertises, but I stopped before going too far.  I'm kind of fuzzy on the right placement of some data, i.e. Attribute vs. DatabaseObject vs. PersonOrWhatever.)
+
+```
+abstract trait Attribute[T] {
+  type Container
+  def data : Container
+  def |(default: T) : T
+}
+trait ListAttr[T] extends Attribute[T] {
+  type Container = List[T]
+  def |(default: T) : T = if (data.isEmpty) default else data.head
+}
+trait OptAttr[T] extends Attribute[T] {
+  type Container = Option[T]
+  def |(default: T) : T = data getOrElse default
+}
+trait ReqAttr[T] extends Attribute[T] {
+  type Container = T
+  def |(default: T) : T = data
+}
+
+
+class Id extends ReqAttr[java.util.UUID] {
+  lazy val id = java.util.UUID.randomUUID
+  def data = id
+}
+
+class Texts(val text: String) extends ListAttr[String] {
+}
+
+class Blobs extends ListAttr[java.nio.ByteBuffer] {
+}
+
+class Time extends ReqAttr[java.util.Date] { // does Scala have a date class?
+  val creationDate : org.joda.time.DateTime
+}
+
+// TODO: should we pluralize all of these to express their list nature? Ids, Texts, Bitses, Times?
+
+class DatabaseObject {
+  /** This object's unique identifier. */
+  val id :Long
+
+  /**
+   * Returns a list of all attributes contained by this object.
+   */
+  def attrs : List[Attribute]
+
+  /**
+   * Returns true if this object contains an attribute with the specified name.
+   */
+  def hasAttr (name :String) :Boolean
+
+  /**
+   * Returns the specified attribute or a blank attribute if this object does
+   * not contain the attribute in question. TODO: if it contains an attribute
+   * of the same name but the wrong type, do we return a blank attribute or fail?
+   */
+  def attr[A >: Attribute[Any]] (aclass :Class[A], name :String) :A
+}
+
+// TBD: query expression classes
+
+class Database {
+  /**
+   * Loads the object with the specified id into an instance of the supplied
+   * DatabaseObject derived class. Returns null if no object exists with the supplied id.
+   */
+  def load[C <: DatabaseObject] (oclass :Class[C], id :UUID) :DatabaseObject
+
+  // TBD: query methods
+}
+```
+
+It also supports the definition of [Ontology](Ontology.md) objects which simplify and clarify the code.
+
+```
+class Person extends DatabaseObject {
+  /** This person's primary name. */
+  def name () :String = attr(Text, "name") | "<unknown>"
+
+  /** Other names by which this person is known. */
+  def aliases () :List[Text] = attr(Text, "aliases")
+
+  /** Email addresses associated with this person. */
+  def addresses () :List[Text] = attr(Text, "addresses")
+}
+```

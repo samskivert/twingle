@@ -1,0 +1,29 @@
+## Random Bits ##
+
+  * Authentication
+
+## Injection and Scanning ##
+
+Ideally Twingle will be running on an Amazon S3 instance or some other network server and all information will be injected into it by plugins or available to it via periodic polling (like Facebook/Twitter status, blogs, etc.).
+
+## Blog Spider ##
+
+  * Should we index blogs explicitly? Should we assume we'll get that data from web history? What if the person reads blogs via custom software?
+  * Should we require that blogs be "subscribed to" in Twingle? Should we instead magically notice that numerous entries are showing up in the browser history and auto-subscribe?
+  * Can we slurp down Google Reader subscription lists? Import .opml files?
+
+## Browser History Spider ##
+
+  * File system scanning is only a temporary stop-gap, we eventually want a FF plugin that injects
+  * We could alternately have Twingle act as a proxy, but that sounds like a recipe for a slower browsing experience and general unhappiness.
+  * If browser history injection was a plugin, we could also make it easy to turn on and off for when you're feeling private.
+
+## SMS Scanning or Injection ##
+
+Is this pie totally up in the sky or might such a thing be possible.
+
+## Text Indexing ##
+
+This library looks like an interesting potential alternative to Lucene:
+
+http://mg4j.dsi.unimi.it/
