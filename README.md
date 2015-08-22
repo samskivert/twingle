@@ -16,7 +16,7 @@ filtering on the Metadata and visualize it in fun, if not especially useful ways
 Twingle is currently just a twinkle in the eye of a few excited programmers, so come back later if
 you're looking for cold hard software.
 
-You can read our [Twingle Overview](Overview) to get an idea of where we're going and how we're
+You can read our [[Twingle Overview|Home]] to get an idea of where we're going and how we're
 getting there.
 
 ## Technology
