@@ -16,11 +16,12 @@ filtering on the Metadata and visualize it in fun, if not especially useful ways
 Twingle is currently just a twinkle in the eye of a few excited programmers, so come back later if
 you're looking for cold hard software.
 
-You can read our [[Twingle Overview|Home]] to get an idea of where we're going and how we're
-getting there.
+You can read our [overview] to get an idea of where we're going and how we're getting there.
 
 ## Technology
 
 Twingle is being implemented in [Scala](http://scala-lang.org/), though we aim to provide libraries
 usable by any JVM language and XML-RPC APIs to make Your Data accessible to other programs that
 wish to interoperate with Twingle.
+
+[overview]: https://github.com/samskivert/twingle/wiki
